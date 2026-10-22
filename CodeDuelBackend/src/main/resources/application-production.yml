@@ -1,0 +1,14 @@
+spring:
+  flyway:
+    enabled: false
+  config:
+    import: optional:configtree:/run/secrets/
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true
+codeduel:
+  require-verified-email: true
+  seed-enabled: false
+  trust-edge-address: true

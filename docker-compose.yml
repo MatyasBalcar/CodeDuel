@@ -1,0 +1,90 @@
+name: codeduel
+services:
+  db:
+    image: postgres:17.11-alpine
+    environment:
+      POSTGRES_DB: codeduel
+      POSTGRES_USER: codeduel
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-codeduel_local}
+    ports:
+      - "127.0.0.1:5444:5432"
+    volumes:
+      - codeduel_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codeduel -d codeduel"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  api:
+    image: codeduel-api:local
+    build: ./CodeDuelBackend
+    environment: &application
+      DATABASE_URL: jdbc:postgresql://db:5432/codeduel
+      DATABASE_USER: codeduel
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-codeduel_local}
+      PORT: 8080
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE-demo}
+      JUDGE_MODE: ${JUDGE_MODE:-FIXTURE}
+      JUDGE_URL: ${JUDGE_URL:-}
+      JUDGE_AUTH_TOKEN: ${JUDGE_AUTH_TOKEN:-}
+      JUDGE0_URL: ${JUDGE0_URL:-}
+      JUDGE0_AUTH_TOKEN: ${JUDGE0_AUTH_TOKEN:-}
+      JUDGE0_JAVA_LANGUAGE_ID: ${JUDGE0_JAVA_LANGUAGE_ID:-0}
+      JUDGE0_JAVA_LANGUAGE_NAME: ${JUDGE0_JAVA_LANGUAGE_NAME:-Java (OpenJDK 21)}
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:5173}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    ports:
+      - "127.0.0.1:8081:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    mem_limit: 768m
+    restart: unless-stopped
+  mailpit:
+    image: axllent/mailpit:v1.31.6
+    ports:
+      - "127.0.0.1:8026:8025"
+      - "127.0.0.1:1026:1025"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+  frontend:
+    build: ./CodeDuelFrontend
+    ports:
+      - "127.0.0.1:5173:8080"
+    depends_on: [api]
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    restart: unless-stopped
+  worker:
+    image: codeduel-api:local
+    profiles: [worker]
+    environment:
+      <<: *application
+      SPRING_PROFILES_ACTIVE: worker
+      JUDGE_MODE: ${JUDGE_MODE:-JUDGE0}
+    depends_on:
+      db:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    mem_limit: 768m
+    restart: unless-stopped
+volumes:
+  codeduel_data:

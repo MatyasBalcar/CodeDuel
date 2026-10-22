@@ -1,0 +1,4 @@
+codeduel:
+  worker-enabled: true
+  judge:
+    mode: ${JUDGE_MODE:FIXTURE}

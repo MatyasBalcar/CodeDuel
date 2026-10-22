@@ -1,0 +1,31 @@
+# A dedicated execution VM. Never add home/project mounts or application credentials.
+minimumLimaVersion: 2.0.0
+base:
+  - template:_images/ubuntu-24.04
+vmType: vz
+cpus: 2
+memory: 3GiB
+disk: 12GiB
+mounts: []
+containerd:
+  system: false
+  user: false
+ssh:
+  forwardAgent: false
+portForwards:
+  - guestPort: 5050
+    hostPort: 5058
+    hostIP: 127.0.0.1
+  - guestPortRange: [1, 65535]
+    ignore: true
+  - guestPortRange: [1, 65535]
+    proto: udp
+    ignore: true
+provision:
+  - mode: system
+    script: |
+      #!/bin/sh
+      set -eu
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get update
+      apt-get install -y --no-install-recommends openjdk-21-jdk-headless ca-certificates curl

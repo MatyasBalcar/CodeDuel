@@ -1,0 +1,15 @@
+{$APP_DOMAIN} {
+	request_body {
+		max_size 4MB
+	}
+	header Strict-Transport-Security "max-age=31536000"
+	@management path /actuator/*
+	respond @management 404
+	reverse_proxy frontend:8080 {
+		header_up X-CodeDuel-Client-IP {remote_host}
+		flush_interval -1
+	}
+	log {
+		output discard
+	}
+}

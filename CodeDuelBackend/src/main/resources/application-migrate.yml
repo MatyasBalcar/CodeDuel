@@ -1,0 +1,13 @@
+spring:
+  main:
+    web-application-type: none
+  flyway:
+    enabled: true
+  config:
+    import: optional:configtree:/run/secrets/
+codeduel:
+  scheduling-enabled: false
+  worker-enabled: false
+  seed-enabled: true
+  judge:
+    mode: DISABLED

@@ -1,0 +1,13 @@
+# Source visibility and retention
+
+Submission source, compiler feedback and public example output are visible only to the authenticated author. Opponents see a minimal progress/verdict projection and cannot retrieve each other's submission detail. Hidden inputs/outputs and runtime stderr are never part of the public API. Administrators review server-side problem tests and reference programs; that permission does not add a user-solution browsing endpoint.
+
+Source is redacted after **90 days** by default (`codeduel.source-retention-days`, 1–3650). The hourly API maintenance job processes up to 100 expired terminal submissions per batch, clears retained diagnostics/stdout and expires old recovery/mail data. Pending jobs remain unchanged until terminal. Redaction is a database-enforced one-way exception to payload immutability, using a fixed tombstone; verdicts, receipts and ratings stay immutable.
+
+Browser drafts are scoped by account/session context, battle/practice and immutable version. They expire after seven days and clear on sign-out or deletion on the current browser. Other devices may retain their own drafts until local expiration/sign-out. Executor JAR checkpoints expire within five minutes; successful jobs request immediate cleanup.
+
+Verification/reset tokens contain 256 random bits; only their SHA-256 hashes are stored in `auth_tokens`. Verification links last 24 hours; password links last 15 minutes. Token links use a URL fragment, which the frontend removes after reading, and require an explicit POST. Sending a replacement invalidates the previous unused token. SMTP outbox bodies briefly contain the link, are cleared after successful delivery and removed after one day. Password resets revoke all persistent sessions.
+
+Account deletion requires the current password and no active battle. The queued matchmaking entry is cancelled atomically; if pairing won the race, deletion is rejected until that match ends. Pending standalone jobs are fenced and cancelled. Source and detailed feedback are erased, recovery/email/session rows removed, contact/credential fields replaced and the username anonymized. Completed matches, rating entries and audit records remain to maintain a coherent competition ledger.
+
+Operators have database access and must restrict, encrypt and expire backups within 30 days for hosted deployments. Deleted content can remain in older backups until expiration. After restoring an older backup, reapply later deletion requests using a separately protected operator ledger before admitting users. The repository's restore drill checks technical recovery; it is not a substitute for that operator process or a jurisdiction-specific privacy policy.

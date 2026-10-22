@@ -1,0 +1,141 @@
+name: codeduel-release
+x-runtime: &runtime
+  image: codeduel-api:release
+  read_only: true
+  tmpfs: ['/tmp:size=64m,noexec,nosuid']
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  mem_limit: 640m
+  restart: unless-stopped
+x-environment: &environment
+  DATABASE_URL: jdbc:postgresql://db:5432/codeduel
+  PORT: 8080
+  JUDGE_MODE: ${JUDGE_MODE:-GO_JUDGE}
+  SPRING_PROFILES_ACTIVE: production
+  PUBLIC_URL: ${PUBLIC_URL:?Set the canonical HTTPS URL}
+services:
+  db:
+    image: postgres:17.11-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    environment:
+      POSTGRES_DB: codeduel
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets: [postgres_password, migrator_password, api_password, worker_password]
+    volumes:
+      - database:/var/lib/postgresql/data
+      - ./db/10-roles.sh:/docker-entrypoint-initdb.d/10-roles.sh:ro
+    networks: [data]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U postgres -d codeduel]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+    mem_limit: 384m
+    restart: unless-stopped
+  migrate:
+    <<: *runtime
+    build: ../CodeDuelBackend
+    restart: 'no'
+    environment:
+      <<: *environment
+      DATABASE_USER: codeduel_migrator
+      SPRING_PROFILES_ACTIVE: migrate
+      CODEDUEL_BOOTSTRAP_USERNAME: ${BOOTSTRAP_USERNAME:?Choose the initial administrator username}
+      CODEDUEL_BOOTSTRAP_EMAIL: ${BOOTSTRAP_EMAIL:?Set the initial administrator email}
+    secrets:
+      - source: migrator_password
+        target: spring.datasource.password
+      - source: bootstrap_password
+        target: codeduel.bootstrap.password
+    networks: [data]
+    depends_on:
+      db: {condition: service_healthy}
+  grants:
+    image: postgres:17.11-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    environment:
+      PGHOST: db
+      PGUSER: codeduel_migrator
+      PGDATABASE: codeduel
+    entrypoint: [/bin/sh, -c]
+    command: ['export PGPASSWORD=$$(cat /run/secrets/migrator_password); exec psql -v ON_ERROR_STOP=1 -f /grants.sql']
+    secrets: [migrator_password]
+    volumes: [./db/grant-runtime.sql:/grants.sql:ro]
+    networks: [data]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+  api:
+    <<: *runtime
+    environment:
+      <<: *environment
+      DATABASE_USER: codeduel_api
+      SMTP_HOST: ${SMTP_HOST:?Configure SMTP delivery}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_AUTH: ${SMTP_AUTH:-true}
+      SMTP_TLS: ${SMTP_TLS:-true}
+      MAIL_FROM: ${MAIL_FROM:?Configure the verified sender address}
+      LOCAL_MAIL: ${LOCAL_MAIL:-false}
+    secrets:
+      - source: api_password
+        target: spring.datasource.password
+      - source: metrics_token
+        target: codeduel.metrics-token
+      - source: smtp_password
+        target: spring.mail.password
+    networks: [data, app, mail]
+    depends_on:
+      grants: {condition: service_completed_successfully}
+  worker:
+    <<: *runtime
+    environment:
+      <<: *environment
+      SPRING_PROFILES_ACTIVE: production,worker
+      DATABASE_USER: codeduel_worker
+      JUDGE_URL: ${JUDGE_URL:?Set a private execution service URL}
+    secrets:
+      - source: worker_password
+        target: spring.datasource.password
+      - source: judge_token
+        target: codeduel.judge.auth-token
+    networks: [data, executor]
+    depends_on:
+      grants: {condition: service_completed_successfully}
+  frontend:
+    image: codeduel-frontend:release
+    build: ../CodeDuelFrontend
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [app, edge]
+    depends_on: [api]
+    restart: unless-stopped
+  ingress:
+    image: caddy:2.10.2-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set the real domain}
+    ports: ['80:80', '443:443']
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - certificates:/data
+      - caddy_config:/config
+    networks: [edge]
+    depends_on: [frontend]
+    restart: unless-stopped
+networks:
+  data: {internal: true}
+  app: {internal: true}
+  edge: {}
+  executor: {}
+  mail: {}
+volumes:
+  database: {}
+  certificates: {}
+  caddy_config: {}
+secrets:
+  postgres_password: {file: ../.secrets/deploy/postgres_password}
+  migrator_password: {file: ../.secrets/deploy/migrator_password}
+  api_password: {file: ../.secrets/deploy/api_password}
+  worker_password: {file: ../.secrets/deploy/worker_password}
+  metrics_token: {file: ../.secrets/deploy/metrics_token}
+  bootstrap_password: {file: ../.secrets/deploy/bootstrap_password}
+  smtp_password: {file: ../.secrets/deploy/smtp_password}
+  judge_token: {file: ../.secrets/deploy/judge_token}

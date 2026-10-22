@@ -1,0 +1,19 @@
+# Local rehearsal: isolated database, locally issued TLS, no public listener.
+name: codeduel-releasecheck
+services:
+  mailpit:
+    image: axllent/mailpit:v1.31.6
+    networks: [mail]
+    ports: ['127.0.0.1:8027:8025']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+  api:
+    depends_on:
+      mailpit: {condition: service_started}
+  ingress:
+    ports: !override ['127.0.0.1:8443:8443']
+    volumes:
+      - ./Caddyfile.local:/etc/caddy/Caddyfile:ro
+      - certificates:/data
+      - caddy_config:/config
