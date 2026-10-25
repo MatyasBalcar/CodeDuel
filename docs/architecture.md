@@ -4,19 +4,19 @@ The product is a Spring Boot 3.5 / Java 21 modular monolith, plus a separate tru
 
 `CodeDuelBackend` is the IntelliJ/Maven project; `CodeDuelFrontend` is the WebStorm/React/TypeScript project. Both share the parent Git repository. Shared orchestration, content generation, worker provisioning and documentation stay outside the IDE source roots. Frontend builds do not require Java; backend builds do not require Node.
 
-| Package | Responsibility |
-| --- | --- |
-| `auth` | BCrypt, JDBC sessions, CSRF, one-time recovery, SMTP outbox and account redaction |
-| `users` | Public profiles, own history, rating graph and leaderboard projections |
-| `problems` | Original seeded content, version/checksum discipline and public-only statements |
-| `administration` | Audited draft/review/publish/retire and judge operations |
-| `matchmaking` | Rating windows, queue claims, heartbeat expiry and pairing |
-| `battles` | Active-session guard, readiness, authoritative clocks, rematches and finalization |
-| `submissions` | Immutable source, battle/practice eligibility, quotas and owner-only feedback |
-| `judge` | Pluggable adapters, leased durable jobs, compiled checkpoints and result aggregation |
-| `ratings` | Pure Elo calculation and append-only transactional history |
-| `events` | Ordered persisted projections and authenticated SSE replay |
-| `common` | DB clock, errors, bounded bodies, rate limits, production policy and metrics |
+| Package          | Responsibility                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------ |
+| `auth`           | BCrypt, JDBC sessions, CSRF, one-time recovery, SMTP outbox and account redaction    |
+| `users`          | Public profiles, own history, rating graph and leaderboard projections               |
+| `problems`       | Original seeded content, version/checksum discipline and public-only statements      |
+| `administration` | Audited draft/review/publish/retire and judge operations                             |
+| `matchmaking`    | Rating windows, queue claims, heartbeat expiry and pairing                           |
+| `battles`        | Active-session guard, readiness, authoritative clocks, rematches and finalization    |
+| `submissions`    | Immutable source, battle/practice eligibility, quotas and owner-only feedback        |
+| `judge`          | Pluggable adapters, leased durable jobs, compiled checkpoints and result aggregation |
+| `ratings`        | Pure Elo calculation and append-only transactional history                           |
+| `events`         | Ordered persisted projections and authenticated SSE replay                           |
+| `common`         | DB clock, errors, bounded bodies, rate limits, production policy and metrics         |
 
 ```mermaid
 sequenceDiagram

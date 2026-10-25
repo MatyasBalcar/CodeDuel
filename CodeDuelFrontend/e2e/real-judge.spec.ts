@@ -22,9 +22,7 @@ test('real Java duel: compiler feedback, hidden verdict and persisted replay', a
         .getByLabel('Password', { exact: true })
         .fill(process.env.DUEL_PASSWORD ?? 'CodeDuel-demo-2026!')
       await page.getByRole('button', { name: 'Sign in', exact: true }).click()
-      await expect(
-        page.getByRole('heading', { name: `Welcome back, ${username}.` }),
-      ).toBeVisible()
+      await expect(page.getByRole('heading', { name: `Welcome back, ${username}.` })).toBeVisible()
     }
     await first.getByRole('button', { name: 'Challenge a friend', exact: true }).click()
     const invite = await first.getByLabel('PRIVATE INVITE LINK').inputValue()

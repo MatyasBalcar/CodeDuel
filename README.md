@@ -8,7 +8,7 @@ Ranked games affect your Elo rating. Private games and practice do not.
 
 ![CodeDuel lobby in black and white](docs/images/lobby.png)
 
-*Lobby preview with demo data.*
+_Lobby preview with demo data._
 
 ## Run on Windows
 
@@ -54,14 +54,14 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows.ps1 stop
 
 ## Project layout
 
-| Folder | Contents |
-| --- | --- |
-| `CodeDuelBackend` | Java 21, Spring Boot, PostgreSQL, and the Maven wrapper |
-| `CodeDuelFrontend` | React, TypeScript, Vite, and the Monaco code editor |
-| `problems` | Fifteen challenges, reference solutions, and test generators |
-| `worker` | Setup for the separate Linux execution environment |
-| `deploy` | Deployment configuration, monitoring, and database utilities |
-| `docs` | Setup instructions and details about the application |
+| Folder             | Contents                                                     |
+| ------------------ | ------------------------------------------------------------ |
+| `CodeDuelBackend`  | Java 21, Spring Boot, PostgreSQL, and the Maven wrapper      |
+| `CodeDuelFrontend` | React, TypeScript, Vite, and the Monaco code editor          |
+| `problems`         | Fifteen challenges, reference solutions, and test generators |
+| `worker`           | Setup for the separate Linux execution environment           |
+| `deploy`           | Deployment configuration, monitoring, and database utilities |
+| `docs`             | Setup instructions and details about the application         |
 
 Open `CodeDuelBackend` in IntelliJ and `CodeDuelFrontend` in WebStorm. Select the JDK path
 printed by setup for IntelliJ's project and Maven runner. The frontend uses Node 24.

@@ -140,17 +140,13 @@ export function App() {
           {system.data?.judgeMode === 'FIXTURE' && (
             <div className="demo-banner">
               <span className="demo-badge">DEMO</span>
-              <span>
-                Demo mode. Choose a sample program to try a submission.
-              </span>
+              <span>Demo mode. Choose a sample program to try a submission.</span>
             </div>
           )}
           {system.data?.judgeMode === 'DISABLED' && (
             <div className="demo-banner">
               <span className="demo-badge">SETUP</span>
-              <span>
-                Submissions are unavailable while the judge is offline.
-              </span>
+              <span>Submissions are unavailable while the judge is offline.</span>
             </div>
           )}
           <Routes>

@@ -3,10 +3,7 @@
     "slug": "balanced-relay",
     "title": "Balanced Relay",
     "difficulty": "EASY",
-    "tags": [
-      "Stacks",
-      "Strings"
-    ],
+    "tags": ["Stacks", "Strings"],
     "version": 1,
     "statement": "A relay station receives a signal made entirely of bracket symbols. Every opening bracket must be closed by the same bracket type, and inner groups must close before outer groups. Decide whether the entire signal is balanced. An empty signal is balanced.",
     "constraints": "0 ≤ signal length ≤ 200,000. Every symbol is one of ( ) [ ] { }.",
@@ -124,10 +121,7 @@
     "slug": "signal-window",
     "title": "Signal Window",
     "difficulty": "MEDIUM",
-    "tags": [
-      "Sliding window",
-      "Strings"
-    ],
+    "tags": ["Sliding window", "Strings"],
     "version": 1,
     "statement": "Your receiver keeps a contiguous window of an incoming signal. A window is clear when no symbol occurs twice inside it. Find the greatest length of any clear window. You may discard symbols only from the ends of a window; you cannot rearrange the signal.",
     "constraints": "0 ≤ signal length ≤ 200,000. Symbols are lowercase English letters a–z or digits 0–9.",
@@ -245,10 +239,7 @@
     "slug": "cargo-pairs",
     "title": "Cargo Pairs",
     "difficulty": "MEDIUM",
-    "tags": [
-      "Hash maps",
-      "Arrays"
-    ],
+    "tags": ["Hash maps", "Arrays"],
     "version": 1,
     "statement": "A cargo dispatcher has n numbered crates, each with an integer balance weight. Two different crates may share a carrier when their weights add to target. Count every unordered pair of crate positions that can share a carrier. A crate can appear in several candidate pairs; you are counting possibilities, not assigning carriers. Equal weights at different positions still represent different crates.",
     "constraints": "0 ≤ n ≤ 200,000. −1,000,000,000 ≤ weight ≤ 1,000,000,000. −2,000,000,000 ≤ target ≤ 2,000,000,000. The answer may require a 64-bit integer.",
@@ -356,10 +347,7 @@
     "slug": "coverage-line",
     "title": "Coverage Line",
     "difficulty": "MEDIUM",
-    "tags": [
-      "Sorting",
-      "Intervals"
-    ],
+    "tags": ["Sorting", "Intervals"],
     "version": 1,
     "statement": "A maintenance drone paints several stretches of a straight rail. Stretch [a, b) includes a and stops just before b. Overlapping paint counts only once. Find the total rail length covered after all stretches have been painted; their arrival order has no significance.",
     "constraints": "0 ≤ n ≤ 100,000; −10^12 ≤ a < b ≤ 10^12. Endpoints are integers. Use a 64-bit answer.",
@@ -492,10 +480,7 @@
     "slug": "dock-slots",
     "title": "Dock Slots",
     "difficulty": "MEDIUM",
-    "tags": [
-      "Heaps",
-      "Sorting"
-    ],
+    "tags": ["Heaps", "Sorting"],
     "version": 1,
     "statement": "Delivery pods reserve one docking slot from their arrival time up to, but excluding, their departure time. A slot can be reused exactly when its previous pod departs. Determine the smallest number of slots that lets every reservation proceed without waiting.",
     "constraints": "0 ≤ n ≤ 100,000; 0 ≤ arrival < departure ≤ 1,000,000,000.",
@@ -618,10 +603,7 @@
     "slug": "grid-courier",
     "title": "Grid Courier",
     "difficulty": "MEDIUM",
-    "tags": [
-      "BFS",
-      "Graphs"
-    ],
+    "tags": ["BFS", "Graphs"],
     "version": 1,
     "statement": "A courier starts in the top-left cell of a rectangular warehouse and must reach the bottom-right cell. Each move enters a horizontally or vertically adjacent open cell. Walls cannot be crossed. Find the fewest moves; a blocked start or destination makes the route impossible.",
     "constraints": "1 ≤ rows, columns ≤ 500. A dot is an open cell and # is a wall.",
@@ -804,10 +786,7 @@
     "slug": "target-bursts",
     "title": "Target Bursts",
     "difficulty": "MEDIUM",
-    "tags": [
-      "Prefix sums",
-      "Hash maps"
-    ],
+    "tags": ["Prefix sums", "Hash maps"],
     "version": 1,
     "statement": "A sensor reports signed adjustments in chronological order. A burst is a nonempty contiguous sequence of reports. Count the bursts whose adjustments add to the requested target. Negative adjustments are valid, and bursts may overlap.",
     "constraints": "0 ≤ n ≤ 200,000; |adjustment| ≤ 1,000,000; |target| ≤ 1,000,000,000. The count needs 64 bits.",
@@ -950,10 +929,7 @@
     "slug": "compass-picks",
     "title": "Compass Picks",
     "difficulty": "EASY",
-    "tags": [
-      "Sorting",
-      "Geometry"
-    ],
+    "tags": ["Sorting", "Geometry"],
     "version": 1,
     "statement": "A survey team can visit k of its numbered stations. Choose those closest to the origin. Compare squared Euclidean distance; when two stations are equally distant, the smaller original station number comes first. Report the chosen station numbers in that order.",
     "constraints": "0 ≤ k ≤ n ≤ 100,000; |x|, |y| ≤ 1,000,000. Station numbers are 1-based. Use 64-bit squared distances.",
@@ -1091,10 +1067,7 @@
     "slug": "token-mint",
     "title": "Token Mint",
     "difficulty": "MEDIUM",
-    "tags": [
-      "Dynamic programming",
-      "Arrays"
-    ],
+    "tags": ["Dynamic programming", "Arrays"],
     "version": 1,
     "statement": "A workshop has unlimited tokens in the listed positive denominations. Assemble exactly the requested value using as few tokens as possible. A denomination can be reused; if exact assembly is impossible, report failure.",
     "constraints": "0 ≤ denomination count ≤ 100; 0 ≤ target ≤ 100,000; distinct denominations are between 1 and 10,000.",
@@ -1232,10 +1205,7 @@
     "slug": "rising-antennas",
     "title": "Rising Antennas",
     "difficulty": "HARD",
-    "tags": [
-      "Binary search",
-      "Dynamic programming"
-    ],
+    "tags": ["Binary search", "Dynamic programming"],
     "version": 1,
     "statement": "Antennas stand in a fixed line. Select some of them without changing their order so that each selected height is strictly greater than the previous selected height. Skipping antennas is allowed. Find the greatest possible number selected.",
     "constraints": "0 ≤ n ≤ 200,000; heights are signed 32-bit integers. Equal heights cannot extend a strictly rising sequence.",
@@ -1388,10 +1358,7 @@
     "slug": "archive-lookup",
     "title": "Archive Lookup",
     "difficulty": "EASY",
-    "tags": [
-      "Binary search",
-      "Arrays"
-    ],
+    "tags": ["Binary search", "Arrays"],
     "version": 1,
     "statement": "An archive stores nondecreasing integer keys, including duplicates. For each query, find the first position whose stored key is at least the requested key. Positions are zero-based. A query beyond every stored key has no answer.",
     "constraints": "0 ≤ n ≤ 200,000; 1 ≤ queries ≤ 200,000; keys and requests are signed 32-bit integers.",
@@ -1524,10 +1491,7 @@
     "slug": "island-ledger",
     "title": "Island Ledger",
     "difficulty": "MEDIUM",
-    "tags": [
-      "DFS",
-      "Disjoint sets"
-    ],
+    "tags": ["DFS", "Disjoint sets"],
     "version": 1,
     "statement": "A coastal chart marks land as 1 and water as 0. Land cells belong to the same island when a chain of horizontal or vertical land neighbors connects them. Diagonal contact alone does not connect islands. Count the islands and measure the largest one.",
     "constraints": "1 ≤ rows, columns ≤ 500. An island size is its number of land cells.",
@@ -1670,10 +1634,7 @@
     "slug": "turned-ledger",
     "title": "Turned Ledger",
     "difficulty": "MEDIUM",
-    "tags": [
-      "Binary search",
-      "Arrays"
-    ],
+    "tags": ["Binary search", "Arrays"],
     "version": 1,
     "statement": "A ledger originally listed distinct keys in increasing order. Someone moved a possibly empty prefix to the end, preserving the order inside both parts. Locate the smallest key in the resulting list. The list may already be sorted.",
     "constraints": "1 ≤ n ≤ 200,000. Keys are distinct signed 32-bit integers. Aim for logarithmic search time.",
@@ -1821,10 +1782,7 @@
     "slug": "equal-banner",
     "title": "Equal Banner",
     "difficulty": "MEDIUM",
-    "tags": [
-      "Prefix sums",
-      "Hash maps"
-    ],
+    "tags": ["Prefix sums", "Hash maps"],
     "version": 1,
     "statement": "A banner is woven from tiles labeled 0 or 1. Choose one contiguous piece containing equally many tiles of each label. Find the longest such piece; you may remove tiles from the ends but cannot reorder or remove tiles inside the piece.",
     "constraints": "0 ≤ n ≤ 200,000. Each tile is 0 or 1.",
@@ -1977,10 +1935,7 @@
     "slug": "step-bridges",
     "title": "Step Bridges",
     "difficulty": "EASY",
-    "tags": [
-      "Dynamic programming",
-      "Counting"
-    ],
+    "tags": ["Dynamic programming", "Counting"],
     "version": 1,
     "statement": "Stepping stones are numbered 0 through n. Start on stone 0 and reach stone n using jumps of exactly one or two positions. Some positive-numbered stones are broken and cannot be landed on. Count distinct sequences of jumps; crossing over a broken stone is allowed.",
     "constraints": "0 ≤ n ≤ 200,000; broken indices are distinct and between 1 and n. Stone 0 is never broken.",

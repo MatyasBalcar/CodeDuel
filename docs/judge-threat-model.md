@@ -8,22 +8,22 @@ No application path invokes `Runtime.exec`, `ProcessBuilder`, a host compiler or
 
 ## Implemented controls
 
-| Threat | Control |
-| --- | --- |
-| Battle/source access | Membership checks on snapshots, writes, SSE and replay; author-only detail endpoint |
-| Hidden-case leakage | Explicit public-only DTOs; no private stdout/stderr persistence or public private-case traces |
-| Mutable judged programs | DB-protected source/version/receipt; one-way terminal retention tombstone only |
-| Source/request flooding | 64 KiB source, 96 KiB normal JSON; 4 MiB admin content writes with two-reader admission; persistent rate limits/backpressure |
-| Shared-machine execution | Dedicated VM, per-execution namespaces/cgroups/seccomp and clean tmpfs state |
-| Filesystem escape/data access | Read-only minimal runtime mounts, unprivileged workload UID, no application/secret/host paths |
-| Network/metadata/DB access | Per-process network namespace plus executor-host isolation requirement |
-| Compile abuse | Annotation processing disabled; compile CPU/wall/memory/process/output/file limits independent of run |
-| Run abuse | Problem CPU/memory plus wall deadline, bounded JVM, process/thread count and output/filesystems |
-| Remote body/redirect abuse | No redirects; HTTP timeouts and streamed body caps; bounded persisted feedback |
-| Token/source logging | Silent executor; application logs stable categories/IDs, not remote bodies or credentials |
-| Worker races/restarts | 60-second expiring fencing token, case/program checkpoints, immutable terminal transition |
-| Infrastructure deciding a winner | Retry/dead-letter path; relevant system failure cancels without Elo |
-| Unverified admin publication | Frozen review content and accepted verification with real-executor provenance |
+| Threat                           | Control                                                                                                                      |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Battle/source access             | Membership checks on snapshots, writes, SSE and replay; author-only detail endpoint                                          |
+| Hidden-case leakage              | Explicit public-only DTOs; no private stdout/stderr persistence or public private-case traces                                |
+| Mutable judged programs          | DB-protected source/version/receipt; one-way terminal retention tombstone only                                               |
+| Source/request flooding          | 64 KiB source, 96 KiB normal JSON; 4 MiB admin content writes with two-reader admission; persistent rate limits/backpressure |
+| Shared-machine execution         | Dedicated VM, per-execution namespaces/cgroups/seccomp and clean tmpfs state                                                 |
+| Filesystem escape/data access    | Read-only minimal runtime mounts, unprivileged workload UID, no application/secret/host paths                                |
+| Network/metadata/DB access       | Per-process network namespace plus executor-host isolation requirement                                                       |
+| Compile abuse                    | Annotation processing disabled; compile CPU/wall/memory/process/output/file limits independent of run                        |
+| Run abuse                        | Problem CPU/memory plus wall deadline, bounded JVM, process/thread count and output/filesystems                              |
+| Remote body/redirect abuse       | No redirects; HTTP timeouts and streamed body caps; bounded persisted feedback                                               |
+| Token/source logging             | Silent executor; application logs stable categories/IDs, not remote bodies or credentials                                    |
+| Worker races/restarts            | 60-second expiring fencing token, case/program checkpoints, immutable terminal transition                                    |
+| Infrastructure deciding a winner | Retry/dead-letter path; relevant system failure cancels without Elo                                                          |
+| Unverified admin publication     | Frozen review content and accepted verification with real-executor provenance                                                |
 
 The supervisor is privileged inside its dedicated VM to create namespaces/cgroups. Submitted processes run without those privileges. Ordinary Docker is not used as the asserted public hostile-code isolation boundary. See [sandbox configuration](../worker/sandbox/README.md) for concrete commands, pinned binary digests and limits.
 

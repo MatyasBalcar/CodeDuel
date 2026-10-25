@@ -89,9 +89,7 @@ export function BattleResult({ battle, user }: { battle: Battle; user: Profile }
         {battle.mode === 'PRIVATE' && (
           <span className="outline-chip">UNRANKED · NO RATING CHANGE</span>
         )}
-        {self?.delta != null && (
-          <p className="result-rating-note">Rating updated.</p>
-        )}
+        {self?.delta != null && <p className="result-rating-note">Rating updated.</p>}
         <ErrorNotice error={room.error} />
         <div className="result-actions">
           <Link className="button primary" to="/">

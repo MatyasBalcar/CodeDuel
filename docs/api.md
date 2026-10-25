@@ -6,16 +6,16 @@ Base: `/api/v1`. JSON names are camelCase. UUID IDs, UTC ISO timestamps. Unknown
 
 `GET /auth/csrf` returns `{token, headerName}` and establishes the CSRF session. Include that header/token with every unsafe write, including login/register/logout. Login rotates the session ID and CSRF token; obtain a new token after authentication. Browser code fetches a fresh token before each write.
 
-| Method | Route | Behavior |
-| --- | --- | --- |
-| POST | `/auth/register` | `{username,email,password}` → 201; then log in separately |
-| POST | `/auth/login` | `{username,password}` → profile + HttpOnly session cookie |
-| POST | `/auth/logout` | CSRF-protected session invalidation → 204 |
-| GET | `/auth/me` | Current profile, or 401 |
-| GET | `/system` | `{judgeMode,language,version}`; no secrets |
-| GET | `/leaderboard` | Top 100 profiles by rating, ties by username |
-| GET | `/users/{username}` | Public profile; no email/password/source |
-| GET | `/users/me/matches` | Authenticated user’s most recent 30 matches |
+| Method | Route               | Behavior                                                  |
+| ------ | ------------------- | --------------------------------------------------------- |
+| POST   | `/auth/register`    | `{username,email,password}` → 201; then log in separately |
+| POST   | `/auth/login`       | `{username,password}` → profile + HttpOnly session cookie |
+| POST   | `/auth/logout`      | CSRF-protected session invalidation → 204                 |
+| GET    | `/auth/me`          | Current profile, or 401                                   |
+| GET    | `/system`           | `{judgeMode,language,version}`; no secrets                |
+| GET    | `/leaderboard`      | Top 100 profiles by rating, ties by username              |
+| GET    | `/users/{username}` | Public profile; no email/password/source                  |
+| GET    | `/users/me/matches` | Authenticated user’s most recent 30 matches               |
 
 Usernames are 3–24 ASCII letters/digits/underscores, starting with a letter, unique case-insensitively. Passwords are 12–72 characters and at most 72 UTF-8 bytes at registration; BCrypt cost 12. Profiles contain `id,username,rating,rankedGames,wins,losses,draws,provisional`.
 
@@ -25,15 +25,15 @@ Usernames are 3–24 ASCII letters/digits/underscores, starting with a letter, u
 
 ## Queue and rooms
 
-| Method | Route | Behavior |
-| --- | --- | --- |
-| GET | `/matchmaking` | `IDLE`, `QUEUED` or `MATCHED`; battle ID, queued/server time and rating window |
-| POST | `/matchmaking/queue` | Idempotent queue/heartbeat; existing queued entry retains original wait time |
-| DELETE | `/matchmaking/queue` | Cancel waiting entry; if pairing already won the race, return the active battle |
-| POST | `/battles/private` | `{battleId,inviteCode}`; raw invite returned only on creation |
-| POST | `/battles/private/{code}/join` | One opponent; returns `{battleId}`; participant retries are idempotent |
-| POST | `/battles/{id}/ready` | Ready check; both confirmations schedule shared start/deadline |
-| POST | `/battles/{id}/forfeit` | In-time forfeit; before start, cancel/leave room |
+| Method | Route                          | Behavior                                                                        |
+| ------ | ------------------------------ | ------------------------------------------------------------------------------- |
+| GET    | `/matchmaking`                 | `IDLE`, `QUEUED` or `MATCHED`; battle ID, queued/server time and rating window  |
+| POST   | `/matchmaking/queue`           | Idempotent queue/heartbeat; existing queued entry retains original wait time    |
+| DELETE | `/matchmaking/queue`           | Cancel waiting entry; if pairing already won the race, return the active battle |
+| POST   | `/battles/private`             | `{battleId,inviteCode}`; raw invite returned only on creation                   |
+| POST   | `/battles/private/{code}/join` | One opponent; returns `{battleId}`; participant retries are idempotent          |
+| POST   | `/battles/{id}/ready`          | Ready check; both confirmations schedule shared start/deadline                  |
+| POST   | `/battles/{id}/forfeit`        | In-time forfeit; before start, cancel/leave room                                |
 
 Search begins at ±150 Elo, grows by 50 every ten seconds, capped at 600, with both players’ windows required to accept the gap. Finished ranked opponents are excluded for ten minutes. Entries expire after 90 seconds without a heartbeat. Private empty rooms expire after five minutes; ready checks last 30 seconds.
 
@@ -52,7 +52,12 @@ POST /battles/{id}/submissions
 Official `/submissions` and public-only `/run` return **202**:
 
 ```json
-{"submissionId":"uuid","verdict":"PENDING","receivedAt":"2026-10-20T20:00:00Z","sequence":1}
+{
+  "submissionId": "uuid",
+  "verdict": "PENDING",
+  "receivedAt": "2026-10-20T20:00:00Z",
+  "sequence": 1
+}
 ```
 
 Source is limited to 64 KiB UTF-8, the complete HTTP body to 96 KiB. The API accepts no client time, problem ID, resource limits, callback URL or sandbox flags. `GET /submissions/{id}` is author-only and returns own immutable source and aggregate verdict, with bounded compiler diagnostics and public example output, without hidden test results or runtime stderr. Example runs do not enter scoring.
@@ -73,15 +78,15 @@ Fixed windows persist in PostgreSQL and include rejected requests: registration 
 
 ## Recovery and account data
 
-| Method | Route | Behavior |
-| --- | --- | --- |
-| POST | `/auth/forgot-password` | `{email}`; same generic response for known/unknown address |
-| POST | `/auth/reset-password` | `{token,password}`; one use, 15-minute expiry, revoke all sessions |
-| POST | `/auth/verify-email` | `{token}`; one use, 24-hour expiry |
-| POST | `/auth/verification-email` | Authenticated resend; invalidates older links |
-| GET | `/auth/account` | Private email, verification flag, Java language and source retention days |
-| POST | `/auth/delete-account` | `{password}`; anonymize, revoke sessions and redact source; active battle rejected |
-| GET | `/users/{username}/rating-history` | Public chronological rating points, latest 100 |
+| Method | Route                              | Behavior                                                                           |
+| ------ | ---------------------------------- | ---------------------------------------------------------------------------------- |
+| POST   | `/auth/forgot-password`            | `{email}`; same generic response for known/unknown address                         |
+| POST   | `/auth/reset-password`             | `{token,password}`; one use, 15-minute expiry, revoke all sessions                 |
+| POST   | `/auth/verify-email`               | `{token}`; one use, 24-hour expiry                                                 |
+| POST   | `/auth/verification-email`         | Authenticated resend; invalidates older links                                      |
+| GET    | `/auth/account`                    | Private email, verification flag, Java language and source retention days          |
+| POST   | `/auth/delete-account`             | `{password}`; anonymize, revoke sessions and redact source; active battle rejected |
+| GET    | `/users/{username}/rating-history` | Public chronological rating points, latest 100                                     |
 
 Every unsafe call still needs CSRF. Reset/verification tokens travel in email URL fragments and are consumed by explicit POST, never by GET. Resend/reset operations have independent IP/account/address-hash limits. Production requires verified email for ranked matchmaking. Profiles also carry `role` and `emailVerified`; email itself is private to `/auth/account`.
 

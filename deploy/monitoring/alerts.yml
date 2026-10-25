@@ -4,17 +4,17 @@ groups:
       - alert: CodeDuelJudgeDeadLetters
         expr: codeduel_judge_jobs{state="DEAD"} > 0
         for: 1m
-        labels: {severity: warning}
+        labels: { severity: warning }
         annotations:
           summary: Judge jobs require operator review
       - alert: CodeDuelJudgeQueueStalled
         expr: codeduel_judge_oldest_seconds > 60
         for: 2m
-        labels: {severity: warning}
+        labels: { severity: warning }
         annotations:
           summary: The oldest pending judge submission exceeds one minute
       - alert: CodeDuelJudgeFailures
         expr: increase(codeduel_judge_failures_total[5m]) > 3
-        labels: {severity: warning}
+        labels: { severity: warning }
         annotations:
           summary: Execution infrastructure is failing repeatedly

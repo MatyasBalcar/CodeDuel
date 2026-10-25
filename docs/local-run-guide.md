@@ -136,13 +136,13 @@ docker compose up -d --build db mailpit api frontend
 
 Open **http://localhost:5173** in two separate browser profiles. Log in as `nova` and `atlas`, both with password `CodeDuel-demo-2026!`. Choose **Challenge a friend**, open the invite in the other profile, and both choose **I’m ready**. Select wrong/accepted samples from **Demo program**, then run examples or submit. Ranked play updates Elo; private rooms and practice do not. Private rematches require the other player's consent.
 
-| Service | Local address |
-| --- | --- |
-| Application | http://localhost:5173 |
-| API / health | http://localhost:8081/api/v1 / http://localhost:8081/actuator/health |
-| PostgreSQL | localhost:5444, database/user `codeduel`, password `codeduel_local` |
-| Captured email | http://localhost:8026 |
-| SMTP for a host API | localhost:1026 |
+| Service             | Local address                                                        |
+| ------------------- | -------------------------------------------------------------------- |
+| Application         | http://localhost:5173                                                |
+| API / health        | http://localhost:8081/api/v1 / http://localhost:8081/actuator/health |
+| PostgreSQL          | localhost:5444, database/user `codeduel`, password `codeduel_local`  |
+| Captured email      | http://localhost:8026                                                |
+| SMTP for a host API | localhost:1026                                                       |
 
 Use the same hostname throughout a session. Host ports bind only to loopback. `docker compose down` preserves the named database volume. Do not remove volumes to switch modes.
 
