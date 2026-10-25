@@ -55,8 +55,6 @@ public class JudgeWorker {
       if (jobs.finishOrReschedule(job, gateway.kind()) && gateway.reusableCheckpoint())
         gateway.release(job.programToken());
     } catch (RuntimeException ex) {
-      // Only IDs and a stable failure category are logged; remote bodies may contain secrets or
-      // code.
       LOG.warn("Judge job {} failed ({})", job.id(), ex.getClass().getSimpleName());
       metrics.counter("codeduel.judge.failures").increment();
       jobs.fail(job);

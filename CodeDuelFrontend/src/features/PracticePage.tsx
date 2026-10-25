@@ -21,7 +21,7 @@ export function PracticePage() {
   if (!session.data)
     return (
       <section className="panel empty-state">
-        <h1>Make room for a good solve.</h1>
+        <h1>Sign in to practice</h1>
         <p>Sign in to run examples and submit a Java solution.</p>
         <Link to="/login" className="button primary">
           Sign in
@@ -70,9 +70,8 @@ function PracticeWorkspace({ problem, user }: { problem: Problem; user: Profile 
     <>
       <div className="page-heading">
         <div>
-          <span className="eyebrow">PRACTICE · UNRANKED</span>
-          <h1>Your pace. Your next breakthrough.</h1>
-          <p>Full judging, with no clock or rating change.</p>
+          <h1>Practice</h1>
+          <p>No time limit or rating change.</p>
         </div>
         <Link to="/problems" className="text-link">
           All challenges
@@ -93,15 +92,13 @@ function PracticeWorkspace({ problem, user }: { problem: Problem; user: Profile 
               <select
                 id="practice-sample"
                 defaultValue=""
-                onChange={(event) =>
-                  setCode(
-                    event.target.value === 'accepted'
-                      ? fixtures.data!.acceptedSource
-                      : event.target.value === 'wrong'
-                        ? fixtures.data!.wrongSource
-                        : problem.starterCode,
-                  )
-                }
+                onChange={(event) => {
+                  const programs = fixtures.data
+                  if (!programs) return
+                  if (event.target.value === 'accepted') setCode(programs.acceptedSource)
+                  else if (event.target.value === 'wrong') setCode(programs.wrongSource)
+                  else setCode(problem.starterCode)
+                }}
               >
                 <option value="">Starter template</option>
                 <option value="wrong">Wrong-answer sample</option>

@@ -25,19 +25,12 @@ export function ReadyRoom({ battle, user, now }: { battle: Battle; user: Profile
   const inviteUrl = inviteCode ? `${window.location.origin}/invite/${inviteCode}` : ''
   return (
     <section className="panel ready-room">
-      <span className="eyebrow">
-        {battle.status === 'WAITING'
-          ? 'A RIVALRY IN THE MAKING'
-          : starting
-            ? 'FIND YOUR FOCUS'
-            : 'YOUR OPPONENT IS HERE'}
-      </span>
       <h1>
         {battle.status === 'WAITING'
-          ? 'Save a seat for your rival.'
+          ? 'Waiting for an opponent'
           : starting
-            ? 'One clock. Here we go.'
-            : 'Ready for a good challenge?'}
+            ? 'Starting soon'
+            : 'Ready to start?'}
       </h1>
       <p>
         {battle.status === 'WAITING'
@@ -69,7 +62,7 @@ export function ReadyRoom({ battle, user, now }: { battle: Battle; user: Profile
                   <span className="avatar waiting-avatar">
                     <Users size={28} />
                   </span>
-                  <strong>Your next rival</strong>
+                  <strong>Opponent</strong>
                   <span>Waiting to join…</span>
                 </>
               )}

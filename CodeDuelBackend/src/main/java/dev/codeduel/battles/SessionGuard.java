@@ -17,8 +17,6 @@ public class SessionGuard {
 
   @Transactional(propagation = Propagation.MANDATORY)
   public void lockUser(UUID user) {
-    // Foreign-key inserts take KEY SHARE on users. NO KEY UPDATE still serializes
-    // session mutations while allowing the matchmaker to insert participants.
     jdbc.sql("SELECT id FROM users WHERE id = :id AND deleted_at IS NULL FOR NO KEY UPDATE")
         .param("id", user)
         .query(UUID.class)

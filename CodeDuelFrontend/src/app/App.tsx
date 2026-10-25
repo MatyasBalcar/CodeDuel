@@ -51,16 +51,6 @@ export function App() {
       navigate('/')
     },
   })
-  const title = location.pathname.startsWith('/arena')
-    ? 'The arena'
-    : location.pathname.startsWith('/problems')
-      ? 'Challenge library'
-      : location.pathname.startsWith('/leaderboard')
-        ? 'The leaderboard'
-        : location.pathname.startsWith('/profile')
-          ? 'Player profile'
-          : 'Play your next move'
-
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main-content">
@@ -73,7 +63,6 @@ export function App() {
           </span>
           CodeDuel<span className="brand-dot">.</span>
         </Link>
-        <div className="nav-caption">PLAY & PROGRESS</div>
         <nav aria-label="Main navigation">
           {navigation.map(({ to, label, icon: Icon, end }) => (
             <NavLink
@@ -84,7 +73,6 @@ export function App() {
             >
               <Icon size={19} />
               {label}
-              {to === '/' && <span className="nav-key">01</span>}
             </NavLink>
           ))}
           {session?.role === 'ADMIN' && (
@@ -96,21 +84,16 @@ export function App() {
         </nav>
         <div className="sidebar-note">
           <Swords size={23} />
-          <h3>
-            One challenge.
-            <br />
-            Two perspectives.
-          </h3>
-          <p>Build your skills, one good battle at a time.</p>
+          <h3>Practice Java</h3>
+          <p>Work through challenges at your own pace.</p>
           <Link to="/problems">
-            Explore the challenges <ArrowUpRight size={14} />
+            Browse challenges <ArrowUpRight size={14} />
           </Link>
         </div>
         <div className="sidebar-bottom">
           <span className="alpha-mark">
             <Flag size={14} /> ALPHA / 0.1
           </span>
-          <p>Made for the love of the solve.</p>
         </div>
       </aside>
       <div className="workspace">
@@ -118,7 +101,7 @@ export function App() {
           <div className="breadcrumb">
             <span>Workspace</span>
             <span>/</span>
-            <strong>{title}</strong>
+            <strong>{pageTitle(location.pathname)}</strong>
           </div>
           <div className="topbar-right">
             <span className={`connection ${system.isSuccess ? 'online' : ''}`}>
@@ -158,7 +141,7 @@ export function App() {
             <div className="demo-banner">
               <span className="demo-badge">DEMO</span>
               <span>
-                Fixture judge · supplied sample programs only. Arbitrary Java is not executed.
+                Demo mode. Choose a sample program to try a submission.
               </span>
             </div>
           )}
@@ -166,8 +149,7 @@ export function App() {
             <div className="demo-banner">
               <span className="demo-badge">SETUP</span>
               <span>
-                Judging is disabled. Configure an isolated Java execution service to evaluate
-                submissions.
+                Submissions are unavailable while the judge is offline.
               </span>
             </div>
           )}
@@ -206,7 +188,7 @@ export function App() {
           <span>
             <Braces size={13} /> CodeDuel
           </span>
-          <span>Think clearly. Code boldly. Play fairly.</span>
+          <Link to="/privacy">Privacy</Link>
           <span>
             Java 21 <span className="tiny-dot" /> v0.1.0
           </span>
@@ -214,4 +196,18 @@ export function App() {
       </div>
     </div>
   )
+}
+
+function pageTitle(path: string) {
+  if (path.startsWith('/arena')) return 'Arena'
+  if (path.startsWith('/practice')) return 'Practice'
+  if (path.startsWith('/problems')) return 'Challenges'
+  if (path.startsWith('/leaderboard')) return 'Leaderboard'
+  if (path.startsWith('/profile') || path.startsWith('/players')) return 'Player profile'
+  if (path.startsWith('/settings')) return 'Account settings'
+  if (path.startsWith('/admin')) return 'Administration'
+  if (path.startsWith('/privacy')) return 'Privacy'
+  if (path.startsWith('/invite')) return 'Private duel'
+  if (path === '/') return 'Lobby'
+  return 'Account'
 }

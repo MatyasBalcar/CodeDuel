@@ -30,7 +30,6 @@ def bracket_oracle(text):
 
 
 def window_oracle(text):
-    # Independent bounded brute force: alphabet has only 36 characters.
     best = 0
     for start in range(len(text)):
         seen = set()

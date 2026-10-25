@@ -1,4 +1,3 @@
-# Local rehearsal: isolated database, locally issued TLS, no public listener.
 name: codeduel-releasecheck
 services:
   mailpit:

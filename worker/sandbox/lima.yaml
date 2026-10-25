@@ -1,4 +1,3 @@
-# A dedicated execution VM. Never add home/project mounts or application credentials.
 minimumLimaVersion: 2.0.0
 base:
   - template:_images/ubuntu-24.04

@@ -4,10 +4,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowRight,
   ArrowUpRight,
-  Check,
   Clock3,
   Code2,
-  Flag,
   Radar,
   ShieldCheck,
   Swords,
@@ -71,15 +69,9 @@ export function LobbyPage() {
     <>
       <div className="page-heading">
         <div>
-          <span className="eyebrow">YOUR DAILY DOSE OF A GOOD CHALLENGE</span>
-          <h1>
-            {session ? `Good to see you, ${session.username}.` : 'Welcome to your next level.'}
-          </h1>
-          <p>A little competition. A lot of progress.</p>
+          <h1>{session ? `Welcome back, ${session.username}.` : 'CodeDuel'}</h1>
+          <p>Compete in a coding duel or practice on your own.</p>
         </div>
-        <span className="outline-chip">
-          <Flag size={14} /> EARLY ACCESS
-        </span>
       </div>
       <ErrorNotice error={enter.error || cancel.error || room.error || queue.error} />
       {currentBattle && (
@@ -96,26 +88,22 @@ export function LobbyPage() {
       )}
       <section className="lobby-hero">
         <div className="hero-copy">
-          <span className="hero-label">
-            <span className="pulse-dot" /> THE HEAD-TO-HEAD CODING ARENA
-          </span>
           <h2>
-            Same problem.
+            One problem.
             <br />
-            Your <em>next move.</em>
+            Two players.
           </h2>
           <p>
-            Meet your match. Find your flow. Turn the problems you love solving into a game worth
-            playing.
+            Solve the same Java challenge against another player. The first correct submission wins.
           </p>
           <div className="hero-actions">
             <button
-              className="button lime"
+              className="button hero-primary"
               onClick={startRanked}
               disabled={enter.isPending || queued || !!currentBattle}
             >
               <Swords size={18} />
-              {queued ? 'Finding your rival…' : 'Play ranked'}
+              {queued ? 'Finding an opponent…' : 'Play ranked'}
               {!queued && <ArrowUpRight size={17} />}
             </button>
             <button
@@ -127,56 +115,24 @@ export function LobbyPage() {
               Challenge a friend
             </button>
           </div>
-          <div className="hero-facts">
-            <span>
-              <Check size={13} /> 1v1 duels
-            </span>
-            <span>
-              <Check size={13} /> Java 21
-            </span>
-            <span>
-              <Check size={13} /> Your pace, your progress
-            </span>
-          </div>
         </div>
         <div className="duel-graphic" aria-hidden="true">
-          <div className="graphic-orbit orbit-one" />
-          <div className="graphic-orbit orbit-two" />
-          <div className="code-tile tile-left">
-            <span className="tile-label">YOUR APPROACH</span>
+          <div className="code-tile">
+            <span className="tile-label">You</span>
             <Code2 size={44} strokeWidth={1.3} />
-            <div className="code-lines">
-              <i />
-              <i />
-              <i />
-            </div>
-            <span className="tile-status">
-              <span /> READY TO SOLVE
-            </span>
           </div>
-          <div className="versus">
-            vs<span>THE SAME CLOCK</span>
+          <span className="versus">vs</span>
+          <div className="code-tile">
+            <span className="tile-label">Opponent</span>
+            <Code2 size={44} strokeWidth={1.3} />
           </div>
-          <div className="code-tile tile-right">
-            <span className="tile-label">A FRESH PERSPECTIVE</span>
-            <Brackets />
-            <div className="code-lines">
-              <i />
-              <i />
-              <i />
-            </div>
-            <span className="tile-status">
-              <span /> YOUR NEXT RIVAL
-            </span>
-          </div>
-          <span className="graphic-coordinate">01 / THE ARENA</span>
         </div>
       </section>
       {queued && (
         <section className="queue-panel panel" aria-live="polite">
           <Radar className="spin-slow" size={31} />
           <div>
-            <h3>Finding a worthy rival…</h3>
+            <h3>Finding an opponent…</h3>
             <p>
               Searching within ±{queue.data?.ratingWindow} Elo. The window expands as you wait. Keep
               this page open.
@@ -209,7 +165,7 @@ export function LobbyPage() {
           icon={<Swords size={20} />}
           label="RANKED BATTLES"
           value={String(session?.rankedGames ?? 0)}
-          detail="Every game is a new lesson"
+          detail="Completed ranked games"
         />
         <Stat
           icon={<Target size={20} />}
@@ -222,14 +178,14 @@ export function LobbyPage() {
           detail={
             session
               ? `${session.wins} wins · ${session.draws} draws · ${session.losses} losses`
-              : 'Your story starts with one game'
+              : 'No ranked games yet'
           }
         />
         <Stat
           icon={<ShieldCheck size={20} />}
-          label="FAIR BY DESIGN"
-          value="One clock"
-          detail="First accepted by server receipt"
+          label="DUEL RULES"
+          value="First solve"
+          detail="The earliest correct submission wins"
         />
       </div>
       <div className="lobby-columns">
@@ -237,7 +193,6 @@ export function LobbyPage() {
           <section className="panel section-panel">
             <div className="section-heading">
               <div>
-                <span className="eyebrow">KEEP THE MOMENTUM</span>
                 <h2>Recent battles</h2>
               </div>
               {session && (
@@ -249,8 +204,8 @@ export function LobbyPage() {
             {!session ? (
               <div className="empty-battles">
                 <Swords size={29} />
-                <h3>Your first rivalry is ahead of you.</h3>
-                <p>Sign in, find an opponent, and make your first move.</p>
+                <h3>No battles yet</h3>
+                <p>Sign in to play a duel.</p>
                 <Link className="text-link" to="/register">
                   Create your account <ArrowRight size={14} />
                 </Link>
@@ -264,7 +219,7 @@ export function LobbyPage() {
             ) : (
               <div className="empty-battles">
                 <Swords size={29} />
-                <h3>A fresh page. A fair fight.</h3>
+                <h3>No battles yet</h3>
                 <p>Your battle history will appear here after your first duel.</p>
               </div>
             )}
@@ -274,19 +229,13 @@ export function LobbyPage() {
               <Users size={21} />
             </div>
             <div>
-              <h3>Got a worthy rival?</h3>
+              <h3>Join a friend</h3>
               <p>Join a private room with a friend’s invite code.</p>
             </div>
             <form
               onSubmit={(event) => {
                 event.preventDefault()
-                let code = invite.trim()
-                try {
-                  code = new URL(code).pathname.split('/').filter(Boolean).at(-1) ?? code
-                } catch {
-                  /* A raw code is also accepted. */
-                }
-                navigate(`/invite/${encodeURIComponent(code)}`)
+                navigate(`/invite/${encodeURIComponent(inviteCode(invite))}`)
               }}
             >
               <label className="sr-only" htmlFor="invite-code">
@@ -309,7 +258,6 @@ export function LobbyPage() {
           <section className="panel section-panel">
             <div className="section-heading">
               <div>
-                <span className="eyebrow">THE CLIMB</span>
                 <h2>Top players</h2>
               </div>
               <Link to="/leaderboard" className="icon-button" aria-label="View full leaderboard">
@@ -336,16 +284,16 @@ export function LobbyPage() {
               ))
             )}
             {!leaderboard.data?.length && !leaderboard.isPending && (
-              <p className="muted">The first place is waiting for its first player.</p>
+              <p className="muted">No players yet.</p>
             )}
           </section>
           <section className="fair-play-note">
             <ShieldCheck size={19} />
             <div>
-              <h3>A better kind of competition.</h3>
+              <h3>How duels work</h3>
               <p>
-                The same challenge and deadline. Private solutions. Ratings applied once. Your code
-                deserves a fair game.
+                Both players get the same challenge and deadline. Your solution stays private.
+                Ranked games affect your Elo rating.
               </p>
             </div>
           </section>
@@ -354,8 +302,7 @@ export function LobbyPage() {
       <section className="challenge-section">
         <div className="section-heading">
           <div>
-            <span className="eyebrow">GET YOUR MIND MOVING</span>
-            <h2>Meet the challenges</h2>
+            <h2>Challenges</h2>
           </div>
           <Link to="/problems" className="text-link">
             Browse library <ArrowRight size={14} />
@@ -370,7 +317,7 @@ export function LobbyPage() {
               key={problem.slug}
             >
               <div className="problem-card-top">
-                <span className="problem-number">0{index + 1}</span>
+                <span className="problem-number">{String(index + 1).padStart(2, '0')}</span>
                 <Difficulty value={problem.difficulty} />
               </div>
               <h3>{problem.title}</h3>
@@ -394,8 +341,14 @@ export function LobbyPage() {
   )
 }
 
-function Brackets() {
-  return <span className="brackets-art">{'{ }'}</span>
+function inviteCode(value: string) {
+  const code = value.trim()
+  try {
+    const path = new URL(code).pathname.split('/').filter(Boolean)
+    return path.at(-1) ?? code
+  } catch {
+    return code
+  }
 }
 function Stat({
   icon,

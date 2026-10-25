@@ -26,13 +26,8 @@ export function InvitePage() {
       <div className="section-icon">
         <Swords size={26} />
       </div>
-      <span className="eyebrow">A FRIENDLY RIVALRY</span>
-      <h1>You’ve been challenged.</h1>
-      <p>
-        Same problem. Same clock. A private, unranked duel.
-        <br />
-        Your rating stays yours.
-      </p>
+      <h1>Join a private duel</h1>
+      <p>You’ll get the same problem and time limit. This game won’t affect your rating.</p>
       <ErrorNotice error={join.error} />
       <button className="button primary" onClick={() => join.mutate()} disabled={join.isPending}>
         {join.isPending ? 'Joining…' : 'Join private duel'}

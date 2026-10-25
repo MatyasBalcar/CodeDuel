@@ -24,8 +24,10 @@ public class JudgePolicy {
     if (settings.mode() == JudgeSettings.Mode.FIXTURE) {
       boolean known =
           ProblemCatalog.WRONG_SOURCE.equals(source)
-              || catalog.all().stream()
-                  .anyMatch(p -> p.slug().equals(slug) && p.referenceSource().equals(source));
+              || catalog
+                  .find(slug)
+                  .map(problem -> problem.referenceSource().equals(source))
+                  .orElse(false);
       if (!known)
         throw new ApiException(
             HttpStatus.UNPROCESSABLE_ENTITY,

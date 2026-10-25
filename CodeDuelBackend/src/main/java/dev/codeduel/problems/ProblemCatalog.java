@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +25,13 @@ public class ProblemCatalog {
     return content;
   }
 
+  public Optional<Content> find(String slug) {
+    for (var problem : content) {
+      if (problem.slug().equals(slug)) return Optional.of(problem);
+    }
+    return Optional.empty();
+  }
+
   public record Content(
       String slug,
       String title,
@@ -41,14 +49,8 @@ public class ProblemCatalog {
       int durationSeconds,
       List<Case> cases) {}
 
-  public record Case(String input, String output, boolean isPublic) {
-    public Case(
-        @com.fasterxml.jackson.annotation.JsonProperty("input") String input,
-        @com.fasterxml.jackson.annotation.JsonProperty("output") String output,
-        @com.fasterxml.jackson.annotation.JsonProperty("public") boolean isPublic) {
-      this.input = input;
-      this.output = output;
-      this.isPublic = isPublic;
-    }
-  }
+  public record Case(
+      String input,
+      String output,
+      @com.fasterxml.jackson.annotation.JsonProperty("public") boolean isPublic) {}
 }

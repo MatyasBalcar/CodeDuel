@@ -150,14 +150,11 @@ export function SolutionWorkspace({
                 onChange={(event) => {
                   const value = event.target.value
                   setSample(value)
-                  if (fixtures.data)
-                    setCode(
-                      value === 'accepted'
-                        ? fixtures.data.acceptedSource
-                        : value === 'wrong'
-                          ? fixtures.data.wrongSource
-                          : problem.starterCode,
-                    )
+                  const programs = fixtures.data
+                  if (!programs) return
+                  if (value === 'accepted') setCode(programs.acceptedSource)
+                  else if (value === 'wrong') setCode(programs.wrongSource)
+                  else setCode(problem.starterCode)
                 }}
                 disabled={!fixtures.data || expired}
               >
@@ -239,7 +236,7 @@ export function SolutionWorkspace({
             <div className="example-tabs-content">
               {problem.examples.map((example, i) => (
                 <div key={i}>
-                  <span className="eyebrow">EXAMPLE {i + 1}</span>
+                  <strong>Example {i + 1}</strong>
                   <p>
                     Input <code>{example.input.trim() || '(empty)'}</code>
                   </p>

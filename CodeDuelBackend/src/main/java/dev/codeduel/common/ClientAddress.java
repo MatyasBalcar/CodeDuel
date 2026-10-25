@@ -13,7 +13,6 @@ public class ClientAddress {
   }
 
   public String of(HttpServletRequest request) {
-    // In production the API has no public port, and Caddy overwrites this header.
     String address = request.getHeader("X-CodeDuel-Client-IP");
     if (trustEdge && address != null && address.length() <= 45 && address.matches("[0-9a-fA-F:.]+"))
       return address;

@@ -36,7 +36,7 @@ export function AccountSettingsPage() {
   if (!session.data)
     return (
       <section className="panel empty-state">
-        <h1>Your account, your choices.</h1>
+        <h1>Account settings</h1>
         <Link className="button primary" to="/login">
           Sign in
         </Link>
@@ -46,9 +46,8 @@ export function AccountSettingsPage() {
     <>
       <div className="page-heading">
         <div>
-          <span className="eyebrow">ACCOUNT SETTINGS</span>
-          <h1>Your account, your choices.</h1>
-          <p>Manage recovery and your private source.</p>
+          <h1>Account settings</h1>
+          <p>Manage your email, password, and saved source code.</p>
         </div>
       </div>
       <section className="panel section-panel">
@@ -84,7 +83,7 @@ export function AccountSettingsPage() {
         )}
       </section>
       <section className="panel section-panel account-retention">
-        <h2>Your source stays private.</h2>
+        <h2>Saved source code</h2>
         <p>
           Submitted programs and detailed feedback are visible to you. Source is removed after{' '}
           {account.data?.sourceRetentionDays ?? 90} days. Match outcomes and rating history remain
@@ -148,8 +147,7 @@ export function AccountSettingsPage() {
 export function PrivacyPage() {
   return (
     <section className="panel section-panel account-policy">
-      <span className="eyebrow">DATA & FAIR PLAY</span>
-      <h1>A fair game. Private code.</h1>
+      <h1>Privacy</h1>
       <h2>Accounts and source</h2>
       <p>
         We use your username, email and password hash to operate your account. Your submitted source

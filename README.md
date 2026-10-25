@@ -1,79 +1,99 @@
 # CodeDuel
 
-**The same problem. The same clock. Your next level.**
+CodeDuel is a one-on-one coding game. Both players get the same Java problem and time
+limit. The first correct submission wins, based on when the server receives it.
 
-CodeDuel is a Java-first competitive coding platform: two players receive the same immutable challenge, submit to an isolated asynchronous judge, then inspect the authoritative outcome, Elo change and replay. The earliest accepted program **by server receipt**, rather than judge completion order, wins.
+You can play ranked matches, invite a friend to a private room, or practice on your own.
+Ranked games affect your Elo rating. Private games and practice do not.
 
-**Status:** implemented local MVP, with real Java 21 execution, fifteen original challenges, operational deployment files and a separate HTTPS release rehearsal. No public hosting or external security audit is claimed. [Verification evidence](docs/verification.md) distinguishes passing local checks from deployment responsibilities.
+![CodeDuel lobby in black and white](docs/images/lobby.png)
 
-## Two IDE projects, one repository
+*Lobby preview with demo data.*
 
-```text
-CodeDuel/
-├── CodeDuelBackend/     IntelliJ IDEA · Java 21 · Spring Boot · Maven
-├── CodeDuelFrontend/    WebStorm · React · TypeScript · Node 24
-├── problems/           original source content, references and independent oracles
-├── worker/             isolated execution VM and orchestration instructions
-├── deploy/             TLS, restricted DB roles, secrets, monitoring and restore drill
-├── docs/
-└── docker-compose.yml
+## Run on Windows
+
+You need **Node.js 24** and **PostgreSQL 17 or newer**. The setup script downloads
+Java 21 and Mailpit, installs frontend dependencies, and creates a separate project
+database on port 5444.
+
+Open PowerShell in this folder:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows.ps1 setup
 ```
 
-Open each named subfolder in its respective IDE. The backend has its own Maven wrapper and Java 21 configuration; the frontend has its own package setup and WebStorm configuration. Both map to the shared Git root. Shared orchestration runs from this parent folder.
+Start the backend in one terminal:
 
-- **[Local run guide](docs/local-run-guide.md)** — IDE setup, fixture demo, real execution VM, host development and tests.
-- **[Deployment guide](docs/deployment-guide.md)** — local HTTPS rehearsal, generated administrator, private services, SMTP, backup/restore and hosted configuration.
-- [Architecture](docs/architecture.md), [database/locking](docs/database.md), [API](docs/api.md), [scoring](docs/rating-and-scoring.md), [threat model](docs/judge-threat-model.md), [retention](docs/data-retention.md).
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows.ps1 backend
+```
 
-## Run locally
+Start the frontend in another:
 
-For a clearly labelled fixture demonstration:
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows.ps1 frontend
+```
+
+Open **http://localhost:5173**. Local verification and password reset emails appear in
+Mailpit at **http://localhost:8026**.
+
+The demo accounts are `nova` and `atlas`, both with password `CodeDuel-demo-2026!`.
+Use separate browser profiles to play both sides of a duel.
+
+The demo judge accepts the supplied sample programs. It does not execute edited Java
+code. To run your own solutions, set up the isolated Linux judge using the
+[local run guide](docs/local-run-guide.md).
+
+The script keeps tools, database files, and captured email in `.local/`. It leaves the
+existing PostgreSQL service on port 5432 alone. Stop the frontend and backend with Ctrl+C,
+then stop the local services with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows.ps1 stop
+```
+
+## Project layout
+
+| Folder | Contents |
+| --- | --- |
+| `CodeDuelBackend` | Java 21, Spring Boot, PostgreSQL, and the Maven wrapper |
+| `CodeDuelFrontend` | React, TypeScript, Vite, and the Monaco code editor |
+| `problems` | Fifteen challenges, reference solutions, and test generators |
+| `worker` | Setup for the separate Linux execution environment |
+| `deploy` | Deployment configuration, monitoring, and database utilities |
+| `docs` | Setup instructions and details about the application |
+
+Open `CodeDuelBackend` in IntelliJ and `CodeDuelFrontend` in WebStorm. Select the JDK path
+printed by setup for IntelliJ's project and Maven runner. The frontend uses Node 24.
+
+## Run with Docker
+
+Docker Desktop is optional. On Windows, the CLI needs a Linux Docker Engine running in
+WSL 2 or on a remote machine. See [Windows with Docker CLI](docs/local-run-guide.md#windows-with-docker-cli)
+for setup. The native Windows `dockerd.exe` runs Windows containers; this project uses Linux containers.
+
+If you already have Docker and Compose installed, you can start the demo from this folder:
 
 ```sh
 docker compose up -d --build db mailpit api frontend
 ```
 
-Open **http://localhost:5173**. Use `nova` and `atlas` in separate browser profiles, password `CodeDuel-demo-2026!`. The sample selector demonstrates correct/incorrect verdicts without executing edited programs.
+Use either the Docker stack or the Windows scripts at a time, since they use the same ports.
+The [local run guide](docs/local-run-guide.md) also covers macOS and the real judge.
 
-For real Java execution on macOS with Lima/Colima:
+## Checks
 
-```sh
-worker/sandbox/setup-local.sh
-docker compose --profile worker stop api worker
-docker compose --env-file .env.judge.local --profile worker up -d --build
-```
-
-The dedicated Linux VM has no host filesystem shares or application credentials. The real worker compiles/runs Java 21 using pinned go-judge v1.13.3 with namespaces/cgroups/seccomp and bounded resources. The optional Judge0 adapter remains interchangeable. Full setup and platform-specific routes are in the guides.
-
-## Implemented
-
-- Persistent sessions, CSRF, BCrypt, email verification, one-time password recovery, account anonymization and source retention.
-- Rating-window matchmaking, strict active-session claims, one-use private invites, readiness, shared server deadlines, forfeit and consent-based private rematches.
-- Immutable source/problem versions, durable fenced job leases, retries/checkpoints, bounded compiler/public feedback and hidden-case privacy.
-- Deterministic receipt-order finalization, earlier-pending barrier, infrastructure cancellation without Elo, atomic/idempotent rating history and leaderboard.
-- Fifteen original problems with **362 independently generated/oracle-verified cases**; standalone public-example and full practice judging.
-- Audited administrator drafting/editing/review/publication/retirement; real accepted reference validation required before publication.
-- Locally bundled Monaco/fonts, split-pane arena, draft recovery, authenticated SSE/reconnect, match replay, profiles and rating charts.
-- Separate production migration/API/worker DB roles, TLS/secure cookies, private secrets/networks, metrics/alert examples and a non-destructive restore drill.
-
-![CodeDuel lobby](docs/images/lobby.png)
-
-## Verify
-
-JDK 21, Node 24, Python 3 and Docker are required:
+From `CodeDuelFrontend`:
 
 ```sh
-./mvnw -B -ntp verify
-python3 problems/verify_catalog.py
-cd CodeDuelFrontend
-npm ci
 npm run format:check
 npm run lint
 npm test
-npm run build
-npm audit --audit-level=moderate
 ```
 
-`python3 worker/sandbox/verify-local.py` additionally runs the real sandbox and real database-worker checks against the separately provisioned VM. Ordinary Maven verification still requires Docker; it skips only optional real-executor cases when no executor is configured. Frontend browser commands for fixture, real and administrator journeys are in the local guide.
+Backend integration tests need Docker. From the project root, run `mvnw.cmd verify` on
+Windows or `./mvnw verify` on macOS/Linux. Browser tests and real judge checks have extra
+setup steps in the [local run guide](docs/local-run-guide.md#verify).
 
-The GitHub Actions workflow is configured; a hosted run requires pushing the repository. Public launch still needs provider-specific firewall/SMTP/certificate/backup/monitoring configuration and sandbox review. Extra languages, tournaments, spectator mode, optimization duels and social features are deferred.
+For more detail, see the [API reference](docs/api.md), [database notes](docs/database.md),
+[rating rules](docs/rating-and-scoring.md), and [deployment guide](docs/deployment-guide.md).

@@ -19,9 +19,8 @@ export function LeaderboardPage() {
     <>
       <div className="page-heading">
         <div>
-          <span className="eyebrow">A LITTLE HIGHER EVERY DAY</span>
-          <h1>Earn your place.</h1>
-          <p>Real opponents. An honest climb. Ranked by Elo.</p>
+          <h1>Leaderboard</h1>
+          <p>Players ranked by Elo rating.</p>
         </div>
         <span className="outline-chip">
           <Trophy size={14} /> TOP 100
@@ -69,7 +68,7 @@ export function LeaderboardPage() {
         )}
         {players.data?.length === 0 && (
           <div className="empty-state">
-            <h2>The climb starts here.</h2>
+            <h2>No players yet</h2>
             <Link className="text-link" to="/register">
               Be the first player <ArrowRight size={15} />
             </Link>
@@ -99,7 +98,7 @@ export function ProfilePage() {
     return (
       <section className="panel empty-state">
         <Trophy size={31} />
-        <h1>Your story starts here.</h1>
+        <h1>Your profile</h1>
         <p>Sign in to track your progress and revisit your battles.</p>
         <Link className="button primary" to="/login">
           Sign in <ArrowRight size={16} />
@@ -111,9 +110,8 @@ export function ProfilePage() {
     <>
       <div className="page-heading">
         <div>
-          <span className="eyebrow">THE PLAYER BEHIND THE CODE</span>
-          <h1>Your progress, on record.</h1>
-          <p>Every attempt is part of the climb.</p>
+          <h1>Your profile</h1>
+          <p>Your rating, results, and recent battles.</p>
         </div>
       </div>
       <section className="panel profile-card">
@@ -149,7 +147,6 @@ export function ProfilePage() {
       <section className="panel section-panel">
         <div className="section-heading">
           <div>
-            <span className="eyebrow">THE FULL PICTURE</span>
             <h2>Your battle history</h2>
           </div>
           <Swords size={23} />
@@ -163,7 +160,7 @@ export function ProfilePage() {
           <div className="empty-state">
             <h3>No battles yet.</h3>
             <Link className="button primary" to="/">
-              Find your first rival <ArrowRight size={16} />
+              Find an opponent <ArrowRight size={16} />
             </Link>
           </div>
         )}
@@ -185,7 +182,6 @@ export function PublicProfilePage() {
     <>
       <div className="page-heading">
         <div>
-          <span className="eyebrow">PLAYER PROFILE</span>
           <h1>{player.username}</h1>
           <p>{player.provisional ? 'Provisional' : 'Established'} · Java 21</p>
         </div>

@@ -13,6 +13,6 @@ export async function leaveCompetition(context: BrowserContext) {
     if (state.battleId)
       await context.request.post(`/api/v1/battles/${state.battleId}/forfeit`, { headers })
   } catch {
-    // Cleanup must not hide the original browser failure when the server/context is unavailable.
+    return
   }
 }

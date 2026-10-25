@@ -318,11 +318,7 @@ public class ProblemAdministration {
 
   private String reference(String stored, String slug) {
     if (stored != null) return stored;
-    return seeds.all().stream()
-        .filter(p -> p.slug().equals(slug))
-        .map(ProblemCatalog.Content::referenceSource)
-        .findFirst()
-        .orElse("");
+    return seeds.find(slug).map(ProblemCatalog.Content::referenceSource).orElse("");
   }
 
   private void validate(Draft draft) {

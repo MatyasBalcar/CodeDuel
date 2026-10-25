@@ -1,11 +1,121 @@
 # CodeDuel — local run guide
 
-All shared commands below run from **Desktop/CodeDuel**. The supported submission language is **Java 21**, with a default-package `public class Main` reading stdin and writing stdout. The library contains fifteen original problems.
+Run shared commands from the project root, which contains both the backend and frontend folders. The supported submission language is **Java 21**, with a default-package `public class Main` reading stdin and writing stdout. The library contains fifteen original problems.
+
+## Windows without Docker
+
+Open PowerShell in the folder containing `CodeDuelBackend` and `CodeDuelFrontend`. Node 24
+and PostgreSQL 17 or newer must be installed.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows.ps1 setup
+```
+
+Setup downloads a checksum-verified [Temurin JDK 21](https://adoptium.net/installation/ci-scripts)
+and [Mailpit 1.31.6](https://github.com/axllent/mailpit/releases/tag/v1.31.6) into `.local/tools`.
+It reuses the installed PostgreSQL binaries to create a separate database cluster in
+`.local/postgres`, installs frontend dependencies, and starts PostgreSQL and captured email
+on loopback addresses. An existing PostgreSQL service on port 5432 can keep running;
+the project uses port 5444.
+
+Start the backend and frontend in separate PowerShell terminals:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows.ps1 backend
+```
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows.ps1 frontend
+```
+
+Open **http://localhost:5173**. Captured verification and password reset emails appear at
+**http://localhost:8026**. The demo accounts are `nova` and `atlas`, with password
+`CodeDuel-demo-2026!`. This is fixture mode: select a supplied demo program to submit.
+Real execution uses the isolated Linux judge described below.
+
+For IntelliJ, select the JDK path printed by setup, set the `demo` profile, and keep the
+database and SMTP defaults from `application.yml`. The `services` action starts PostgreSQL
+and Mailpit before starting the application in the IDE. A separate Maven installation is
+unnecessary because the backend includes its wrapper.
+
+Stop backend and frontend terminals with Ctrl+C. Run the following to stop this project's
+database and captured email without removing their data:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows.ps1 stop
+```
+
+Local tools, database files, email, and logs stay in `.local/`, outside the source files.
+
+## Windows with Docker CLI
+
+Docker Desktop is optional. The Docker CLI, Compose, and Buildx can be installed separately:
+
+```powershell
+winget install --id Docker.DockerCLI --exact --source winget
+winget install --id Docker.DockerCompose --exact --source winget
+winget install --id Docker.Buildx --exact --source winget
+```
+
+For `docker compose` and `docker buildx` to work, Docker must find their executables as
+CLI plugins. The `cliPluginsExtraDirs` setting in `%USERPROFILE%\.docker\config.json`
+can point to `%LOCALAPPDATA%\Microsoft\WinGet\Links`. Use the full path in the JSON file.
+This is configured on the current PC. Reopen PowerShell after installing the tools to
+pick up the updated PATH.
+
+The client tools need a running engine. This project uses Linux containers, so the
+native Windows `dockerd.exe` cannot run it. One local option is
+[Docker Engine in Ubuntu](https://docs.docker.com/engine/install/ubuntu/) under WSL 2.
+
+If WSL is new to the machine, install Ubuntu from PowerShell:
+
+```powershell
+wsl --install --distribution Ubuntu-24.04
+```
+
+Restart Windows if requested, finish Ubuntu's initial user setup, then install Docker
+Engine inside Ubuntu using the linked instructions. Run this project's Compose commands
+from its folder inside WSL. Windows drives are mounted under `/mnt/c`, `/mnt/d`, and so on.
+
+```sh
+docker version
+docker compose up -d --build db mailpit api frontend
+```
+
+`docker version` should show both a client and a server. The Windows CLI can also connect
+to an existing Linux engine through a Docker context. Installing the client alone does
+not start a Linux engine.
+
+On this PC, the `wsl-linux` context connects PowerShell to Docker Engine in `Ubuntu-24.04`.
+It starts Ubuntu when a Docker command connects, using SSH over WSL's standard input and
+output. A background WSL process keeps detached containers running after the command
+exits. No Docker Desktop or network listener is needed for this connection.
+
+```powershell
+docker context use wsl-linux
+docker version
+docker compose up
+```
+
+If you see an error about `//./pipe/docker_engine`, check `docker context ls`. The default
+Windows context points to a Windows engine; select `wsl-linux` to use the configured Linux
+engine. The context and SSH keys belong to this Windows user and are stored outside the
+project.
+
+To stop the containers and release the WSL instance when finished:
+
+```powershell
+docker compose down
+wsl --terminate Ubuntu-24.04
+```
+
+This stops all processes in that Ubuntu distribution. The next command using the
+`wsl-linux` context starts the engine again.
 
 ## Open the projects
 
 ```text
-CodeDuel/                        shared Git repository and orchestration
+CodeDuel/                        shared setup files and orchestration
 ├── CodeDuelBackend/             IntelliJ: open this folder and import pom.xml
 ├── CodeDuelFrontend/            WebStorm: open this folder and package.json
 ├── problems/                   trusted content/oracles, never frontend assets
@@ -14,7 +124,7 @@ CodeDuel/                        shared Git repository and orchestration
 └── docs/
 ```
 
-In IntelliJ select JDK 21 for the project **and Maven runner**, then reload Maven. In WebStorm select Node 24 and the project TypeScript installation. Do not open the parent as the Java source project. Both IDEs map Git to the parent repository; there are no nested repositories. Each subproject has its own build and IDE configuration.
+In IntelliJ select JDK 21 for the project **and Maven runner**, then reload Maven. In WebStorm select Node 24 and the project TypeScript installation. Do not open the parent as the Java source project. Each subproject has its own build and IDE configuration.
 
 ## Quick fixture demonstration
 

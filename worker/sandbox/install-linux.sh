@@ -1,5 +1,4 @@
 #!/bin/sh
-# Run ONLY in a dedicated execution VM. This installs a privileged sandbox supervisor.
 set -eu
 [ "$(id -u)" = 0 ] || { echo 'Run as root inside the execution VM.' >&2; exit 1; }
 [ -f /tmp/codeduel-mount.yaml ] || { echo 'Copy mount.yaml to /tmp/codeduel-mount.yaml first.' >&2; exit 1; }
@@ -21,7 +20,6 @@ printf '%s  %s\n' "$digest" /opt/codeduel-judge/go-judge.download | sha256sum -c
 install -m 0755 /opt/codeduel-judge/go-judge.download /opt/codeduel-judge/go-judge
 rm /opt/codeduel-judge/go-judge.download
 install -m 0644 /tmp/codeduel-mount.yaml /opt/codeduel-judge/mount.yaml
-# Auth is written separately via stdin; do not place it in an argument, log or sandbox mount.
 cat > /etc/systemd/system/codeduel-judge.service <<'SERVICE'
 [Unit]
 Description=CodeDuel isolated Java executor

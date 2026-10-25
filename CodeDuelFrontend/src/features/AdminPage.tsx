@@ -101,9 +101,8 @@ export function AdminPage() {
     <>
       <div className="page-heading">
         <div>
-          <span className="eyebrow">CONTENT & OPERATIONS</span>
-          <h1>A fair challenge starts here.</h1>
-          <p>Draft, verify, then publish an immutable version.</p>
+          <h1>Administration</h1>
+          <p>Create, test, and publish challenges.</p>
         </div>
         <button
           className="button primary"

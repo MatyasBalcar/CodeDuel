@@ -7,17 +7,7 @@ export function HistoryList({ matches, userId }: { matches: MatchHistory[]; user
   return (
     <div className="history-list">
       {matches.map((match) => {
-        const terminal = match.status === 'FINISHED' || match.status === 'CANCELLED'
-        const outcome =
-          match.status === 'CANCELLED'
-            ? 'Cancelled'
-            : !terminal
-              ? 'Active'
-              : !match.winnerId
-                ? 'Draw'
-                : match.winnerId === userId
-                  ? 'Win'
-                  : 'Loss'
+        const outcome = matchOutcome(match, userId)
         return (
           <Link to={`/arena/${match.id}`} className="history-row" key={match.id}>
             <span className={`outcome-mark ${outcome.toLowerCase()}`}>
@@ -49,4 +39,11 @@ export function HistoryList({ matches, userId }: { matches: MatchHistory[]; user
       })}
     </div>
   )
+}
+
+function matchOutcome(match: MatchHistory, userId: string) {
+  if (match.status === 'CANCELLED') return 'Cancelled'
+  if (match.status !== 'FINISHED') return 'Active'
+  if (!match.winnerId) return 'Draw'
+  return match.winnerId === userId ? 'Win' : 'Loss'
 }

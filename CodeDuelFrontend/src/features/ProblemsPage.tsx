@@ -16,9 +16,8 @@ export function ProblemsPage() {
     <>
       <div className="page-heading">
         <div>
-          <span className="eyebrow">THE ART OF THE SOLVE</span>
-          <h1>A good problem changes you.</h1>
-          <p>Original challenges. Clear contracts. Something to think about.</p>
+          <h1>Challenges</h1>
+          <p>Find a Java problem to practice.</p>
         </div>
         <span className="outline-chip">{problems.data?.length ?? '—'} ORIGINAL CHALLENGES</span>
       </div>
@@ -93,7 +92,7 @@ export function ProblemPage() {
           <Link className="button primary" to={`/practice/${slug}`}>
             Practice this challenge
           </Link>
-          <p>Ready for some friendly pressure? Solve a challenge in a head-to-head duel.</p>
+          <p>You can also solve a challenge against another player.</p>
           <Link className="button primary" to="/">
             Find a duel <ArrowRight size={16} />
           </Link>
@@ -106,10 +105,10 @@ export function ProblemPage() {
 export function ProblemStatement({ problem }: { problem: Problem }) {
   return (
     <article className="problem-statement">
-      <span className="eyebrow">CHALLENGE / VERSION {problem.version}</span>
       <h1>{problem.title}</h1>
       <div className="problem-meta">
         <Difficulty value={problem.difficulty} />
+        <span>Version {problem.version}</span>
         <span>{problem.timeLimitMs / 1000}s CPU</span>
         <span>{problem.memoryLimitMb} MB</span>
       </div>
@@ -126,7 +125,7 @@ export function ProblemStatement({ problem }: { problem: Problem }) {
       <h3>Examples</h3>
       {problem.examples.map((example, i) => (
         <div className="example" key={i}>
-          <div className="example-title">EXAMPLE {i + 1}</div>
+          <div className="example-title">Example {i + 1}</div>
           <span>Input</span>
           <pre>{example.input || '(empty line)'}</pre>
           <span>Output</span>

@@ -1,5 +1,4 @@
 #!/bin/sh
-# macOS + Lima. The application stays in the existing Docker VM; submitted code gets its own VM.
 set -eu
 cd "$(dirname "$0")/../.."
 command -v limactl >/dev/null || { echo 'Install Lima first: brew install lima' >&2; exit 1; }

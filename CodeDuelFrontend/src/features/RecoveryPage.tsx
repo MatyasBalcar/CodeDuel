@@ -31,16 +31,14 @@ export function RecoveryPage({ mode }: { mode: 'forgot' | 'reset' | 'verify' }) 
       void queries.invalidateQueries({ queryKey: ['account'] })
     },
   })
-  const title =
-    mode === 'forgot'
-      ? 'Find your way back.'
-      : mode === 'reset'
-        ? 'A fresh start.'
-        : 'Make it official.'
+  const titles = {
+    forgot: 'Forgot password',
+    reset: 'Reset password',
+    verify: 'Verify email',
+  }
   return (
     <section className="panel account-panel">
-      <span className="eyebrow">YOUR ACCOUNT</span>
-      <h1>{title}</h1>
+      <h1>{titles[mode]}</h1>
       <ErrorNotice error={action.error} />
       {action.isSuccess ? (
         <div role="status">

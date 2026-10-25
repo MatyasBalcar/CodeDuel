@@ -9,7 +9,7 @@ async function register(page: Page, name: string) {
   await page.getByLabel('Email', { exact: true }).fill(`${name}@example.invalid`)
   await page.getByLabel('Password', { exact: true }).fill(password)
   await page.getByRole('button', { name: 'Create account', exact: true }).click()
-  await expect(page.getByRole('heading', { name: `Good to see you, ${name}.` })).toBeVisible()
+  await expect(page.getByRole('heading', { name: `Welcome back, ${name}.` })).toBeVisible()
 }
 
 async function readyBoth(first: Page, second: Page) {
@@ -68,7 +68,7 @@ test('private duel: registration, shared problem, wrong answer, draft recovery, 
     await first.getByLabel('Demo program').selectOption('accepted')
     await first.getByRole('button', { name: 'Submit solution', exact: true }).click()
     await expect(first.getByRole('heading', { name: 'That’s your win.' })).toBeVisible()
-    await expect(second.getByRole('heading', { name: 'A lesson for the next one.' })).toBeVisible()
+    await expect(second.getByRole('heading', { name: 'You lost' })).toBeVisible()
     await expect(first.getByText('UNRANKED · NO RATING CHANGE')).toBeVisible()
     await expect(first.getByRole('heading', { name: 'Battle replay' })).toBeVisible()
     await expect(first.getByText('Final result recorded')).toBeVisible()
@@ -140,7 +140,7 @@ test('ranked duel: queue, judge completion, durable Elo, history and leaderboard
 test('library and mobile lobby stay readable without horizontal overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'Welcome to your next level.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'CodeDuel' })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await page.getByRole('link', { name: 'Challenges', exact: true }).click()
   await page.getByRole('textbox', { name: 'Search challenges' }).fill('signal')

@@ -55,10 +55,9 @@ public class DemoConfiguration {
       if (judge.mode() != dev.codeduel.judge.JudgeSettings.Mode.FIXTURE)
         throw ApiException.notFound();
       String source =
-          catalog.all().stream()
-              .filter(p -> p.slug().equals(slug))
+          catalog
+              .find(slug)
               .map(ProblemCatalog.Content::referenceSource)
-              .findFirst()
               .orElseThrow(ApiException::notFound);
       return Map.of("acceptedSource", source, "wrongSource", ProblemCatalog.WRONG_SOURCE);
     }
@@ -73,11 +72,10 @@ public class DemoConfiguration {
         throw ApiException.conflict(
             "NOT_STARTED", "Sample programs are available after the shared start.");
       String source =
-          catalog.all().stream()
-              .filter(p -> p.slug().equals(snapshot.problem().slug()))
-              .findFirst()
-              .orElseThrow()
-              .referenceSource();
+          catalog
+              .find(snapshot.problem().slug())
+              .map(ProblemCatalog.Content::referenceSource)
+              .orElseThrow();
       return Map.of("acceptedSource", source, "wrongSource", ProblemCatalog.WRONG_SOURCE);
     }
   }

@@ -181,7 +181,6 @@ public class JudgeJobStore {
           .update();
       return false;
     }
-    // Fixed testcase order makes aggregation independent of executor completion order.
     Verdict verdict =
         jdbc.sql(
                 """
@@ -219,7 +218,6 @@ public class JudgeJobStore {
           .update();
       commitVerdict(job, Verdict.JUDGE_ERROR);
     } else {
-      // Executor caches may have restarted or expired. Repeating uncommitted work is safe.
       jdbc.sql(
               "UPDATE submission_case_results SET executor_token = NULL WHERE submission_id = :id AND verdict IS NULL")
           .param("id", job.submissionId())
@@ -240,7 +238,6 @@ public class JudgeJobStore {
   }
 
   private boolean ownsLease(Job job) {
-    // Fencing token AND expiry are checked under the row lock on every write.
     return jdbc.sql(
             "SELECT status = 'RUNNING' AND lease_token = :lease AND lease_until > clock_timestamp() FROM judge_jobs WHERE id = :id FOR UPDATE")
         .param("lease", job.leaseToken())

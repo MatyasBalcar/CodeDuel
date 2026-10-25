@@ -29,6 +29,10 @@ export function BattleResult({ battle, user }: { battle: Battle; user: Profile }
   const won = battle.winnerId === user.id
   const draw = !battle.winnerId && !cancelled
   const self = battle.players.find((p) => p.userId === user.id)
+  let title = 'You lost'
+  if (cancelled) title = 'Battle cancelled'
+  else if (draw) title = 'Draw'
+  else if (won) title = 'You won'
   const reasons: Record<string, string> = {
     FIRST_ACCEPTED: 'The earliest server-received, fully accepted solution wins.',
     DEADLINE_DRAW: 'The deadline passed with no accepted solution. Both players draw.',
@@ -54,16 +58,7 @@ export function BattleResult({ battle, user }: { battle: Battle; user: Profile }
         <div className="result-icon">
           {cancelled ? <Flag size={35} /> : draw ? <Users size={35} /> : <Trophy size={35} />}
         </div>
-        <span className="eyebrow">{cancelled ? 'BATTLE CANCELLED' : 'FINAL RESULT'}</span>
-        <h1>
-          {cancelled
-            ? 'Another time, another duel.'
-            : draw
-              ? 'A worthy draw.'
-              : won
-                ? 'That’s your win.'
-                : 'A lesson for the next one.'}
-        </h1>
+        <h1>{title}</h1>
         <p>{reasons[battle.finalizationReason ?? ''] ?? 'This battle has ended.'}</p>
         <div className="result-players">
           {battle.players.map((player) => (
@@ -95,7 +90,7 @@ export function BattleResult({ battle, user }: { battle: Battle; user: Profile }
           <span className="outline-chip">UNRANKED · NO RATING CHANGE</span>
         )}
         {self?.delta != null && (
-          <p className="result-rating-note">Rating history saved. This result is safe to reload.</p>
+          <p className="result-rating-note">Rating updated.</p>
         )}
         <ErrorNotice error={room.error} />
         <div className="result-actions">
@@ -117,7 +112,6 @@ export function BattleResult({ battle, user }: { battle: Battle; user: Profile }
       <section className="panel section-panel replay-panel">
         <div className="section-heading">
           <div>
-            <span className="eyebrow">HOW IT PLAYED OUT</span>
             <h2>Battle replay</h2>
           </div>
           <span className="outline-chip">

@@ -237,7 +237,6 @@ public class BattleService {
       return;
     }
     if (!clock.now().isBefore(battle.endsAt())) {
-      // Expired games must resolve from their submissions rather than a late forfeit.
       finalizer.attempt(id);
       return;
     }

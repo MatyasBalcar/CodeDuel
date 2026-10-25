@@ -1,29 +1,45 @@
-# CodeDuelFrontend
+# CodeDuel frontend
 
-Open **this folder** in WebStorm. Select a **Node 24** interpreter, use the project TypeScript installation, and run the `dev` script from `package.json`. Java and Maven are not required to build the frontend.
+The React and TypeScript app for CodeDuel. It uses Vite for local development and Monaco
+for the Java editor. Open this folder in WebStorm and select **Node.js 24**.
+
+## Run locally
+
+On Windows, the parent folder has a [setup script](../docs/local-run-guide.md#windows-without-docker)
+that prepares the backend services and installs frontend dependencies. Once setup is done,
+you can use its `frontend` action or run these commands from this folder:
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open **http://localhost:5173**. Vite proxies `/api` to the backend at `http://127.0.0.1:8081`, preserving same-origin sessions and CSRF. Start the IntelliJ backend separately or use the shared Docker setup in the parent directory. Stop the Docker frontend before running Vite on the same port.
+Open **http://localhost:5173**. Start the backend separately on port **8081**. Vite forwards
+`/api` requests to it, so login and CSRF requests use the same origin as the frontend.
+If the Docker frontend is running, stop it before starting Vite on the same port.
+
+## Checks
 
 ```sh
 npm run format:check
 npm run lint
 npm test
-npm run build
 ```
 
-Browser tests use the running backend. `E2E_BASE_URL` selects an existing frontend; otherwise Playwright starts Vite. The optional real-judge journey reads trusted test source from the sibling backend, and needs a separately provisioned execution VM.
+To create a production bundle, run `npm run build`.
+
+## Browser tests
+
+Start the backend in demo mode, then run:
 
 ```sh
 npx playwright install chromium
-E2E_BASE_URL=http://127.0.0.1:5173 npm run test:e2e
+npm run test:e2e
 ```
 
-`node_modules`, `dist`, browser reports and test output are excluded from project indexing. Both IDE projects share the Git repository one directory above.
+Playwright starts Vite unless `E2E_BASE_URL` points to a running frontend. Email recovery,
+real judge, and administrator tests need additional services or credentials; the
+[local run guide](../docs/local-run-guide.md#verify) lists those options.
 
-- [Local run guide](../docs/local-run-guide.md)
-- [Deployment guide](../docs/deployment-guide.md)
+The [deployment guide](../docs/deployment-guide.md) covers serving the frontend with the
+rest of the application.

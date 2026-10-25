@@ -43,3 +43,4 @@ CodeDuelFrontend/test-results/
 *.tsbuildinfo
 /backups/
 .secrets/
+.local/

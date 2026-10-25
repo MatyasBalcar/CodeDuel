@@ -86,7 +86,6 @@ public final class GoJudgeGateway implements JudgeGateway {
     try {
       exchange("DELETE", "/file/" + token, null);
     } catch (JudgeUnavailableException ignored) {
-      /* bounded cache TTL covers a worker/executor crash */
     }
   }
 

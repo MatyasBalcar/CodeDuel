@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowRight, Braces, LockKeyhole } from 'lucide-react'
+import { ArrowRight, LockKeyhole } from 'lucide-react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { write } from '../api/client'
 import { sessionKey, useSession, useSystem } from '../api/hooks'
@@ -12,7 +12,8 @@ export function AuthPage({ register = false }: { register?: boolean }) {
   const queries = useQueryClient()
   const navigate = useNavigate()
   const [params] = useSearchParams()
-  const next = params.get('next')?.startsWith('/invite/') ? params.get('next')! : '/'
+  const requestedPage = params.get('next') ?? ''
+  const next = requestedPage.startsWith('/invite/') ? requestedPage : '/'
   const login = useMutation({
     mutationFn: async ({
       username,
@@ -36,37 +37,16 @@ export function AuthPage({ register = false }: { register?: boolean }) {
   return (
     <div className="auth-layout">
       <div className="auth-story">
-        <span className="eyebrow">
-          <Braces size={16} /> THE NEXT LEVEL IS YOURS
-        </span>
-        <h1>
-          Great code.
-          <br />
-          Better rivals.
-        </h1>
-        <p>
-          A shared problem, a ticking clock, and someone who makes you a little better. Welcome to
-          CodeDuel.
-        </p>
-        <div className="auth-principles">
-          <span>
-            01 <strong>Equal challenge</strong>
-          </span>
-          <span>
-            02 <strong>Fair competition</strong>
-          </span>
-          <span>
-            03 <strong>Visible progress</strong>
-          </span>
-        </div>
+        <h1>Code with an opponent.</h1>
+        <p>Solve Java challenges in a timed duel, or practice on your own.</p>
       </div>
       <section className="panel auth-card">
         <div className="section-icon">
           <LockKeyhole size={22} />
         </div>
-        <h2>{register ? 'Join the arena' : 'Welcome back'}</h2>
+        <h2>{register ? 'Create an account' : 'Sign in'}</h2>
         <p className="muted">
-          {register ? 'Your first good rivalry starts here.' : 'Your next challenge is waiting.'}
+          {register ? 'Choose a username to get started.' : 'Use your CodeDuel account.'}
         </p>
         <ErrorNotice error={login.error} />
         <form
@@ -118,7 +98,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
             />
           </label>
           <button className="button primary full" disabled={login.isPending}>
-            {login.isPending ? 'Opening the arena…' : register ? 'Create account' : 'Sign in'}
+            {login.isPending ? 'Signing in…' : register ? 'Create account' : 'Sign in'}
             <ArrowRight size={17} />
           </button>
         </form>
@@ -128,7 +108,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
           </Link>
         )}
         <p className="auth-switch">
-          {register ? 'Already have an account?' : 'New around here?'}{' '}
+          {register ? 'Already have an account?' : 'Need an account?'}{' '}
           <Link
             to={`${register ? '/login' : '/register'}${next !== '/' ? `?next=${encodeURIComponent(next)}` : ''}`}
           >
@@ -137,7 +117,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
         </p>
         {system.data?.judgeMode === 'FIXTURE' && (
           <div className="demo-accounts">
-            <span className="eyebrow">LOCAL DEMO ACCOUNTS</span>
+            <h3>Demo accounts</h3>
             <p>
               <code>nova</code> or <code>atlas</code>
               <br />

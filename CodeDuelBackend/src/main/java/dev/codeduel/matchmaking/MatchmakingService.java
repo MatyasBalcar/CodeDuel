@@ -103,8 +103,6 @@ public class MatchmakingService {
 
   @Transactional
   public int pair() {
-    // This single, transaction-scoped leader lock serializes pairing and stale-queue cleanup
-    // across API instances. Row locks also serialize cancellation and heartbeat changes.
     boolean leader =
         jdbc.sql("SELECT pg_try_advisory_xact_lock(772406003)").query(Boolean.class).single();
     if (!leader) return 0;

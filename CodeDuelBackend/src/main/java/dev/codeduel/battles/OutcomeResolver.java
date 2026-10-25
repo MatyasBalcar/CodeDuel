@@ -18,12 +18,10 @@ public final class OutcomeResolver {
             .filter(s -> s.verdict() == Verdict.ACCEPTED)
             .min(Comparator.comparingLong(Candidate::sequence));
     boolean expired = !now.isBefore(deadline);
-    // Later failures cannot change an already proven earliest accepted receipt.
     var relevant =
         official.stream()
             .filter(s -> accepted.isEmpty() || s.sequence() < accepted.get().sequence())
             .toList();
-    // After the deadline, wait for accurate feedback on every in-time receipt too.
     var feedbackBarrier = expired ? official : relevant;
     if (feedbackBarrier.stream().anyMatch(s -> !s.verdict().terminal())) return Decision.pending();
     if (relevant.stream().anyMatch(s -> s.verdict() == Verdict.JUDGE_ERROR)) {

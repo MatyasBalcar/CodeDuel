@@ -57,23 +57,20 @@ public class BattleStreamController {
 
   @Scheduled(fixedDelay = 1000)
   public void deliver() {
-    streams.forEach(
-        (id, stream) -> {
-          try {
-            for (var event : events.since(stream.battleId, stream.userId, stream.cursor)) {
-              stream.emitter.send(
-                  SseEmitter.event()
-                      .id(Long.toString(event.sequence()))
-                      .name("battle")
-                      .data(event));
-              stream.cursor = event.sequence();
-            }
-            stream.emitter.send(SseEmitter.event().comment("heartbeat"));
-          } catch (IOException | RuntimeException ex) {
-            streams.remove(id);
-            stream.emitter.complete();
-          }
-        });
+    for (var entry : streams.entrySet()) {
+      var stream = entry.getValue();
+      try {
+        for (var event : events.since(stream.battleId, stream.userId, stream.cursor)) {
+          stream.emitter.send(
+              SseEmitter.event().id(Long.toString(event.sequence())).name("battle").data(event));
+          stream.cursor = event.sequence();
+        }
+        stream.emitter.send(SseEmitter.event().comment("heartbeat"));
+      } catch (IOException | RuntimeException ex) {
+        streams.remove(entry.getKey());
+        stream.emitter.complete();
+      }
+    }
   }
 
   private static final class Connection {

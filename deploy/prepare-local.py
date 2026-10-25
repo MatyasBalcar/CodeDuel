@@ -40,8 +40,6 @@ with env.open('a') as stream:
             stream.write(f'{key}={value}\n')
 print('Local rehearsal credentials prepared; no secret values printed.')
 
-# Compose mounts individual files; parent directories protect them from other host users.
-# Read-only leaves let non-root application users read only their explicitly mounted secrets.
 for path in folder.iterdir():
     if path.is_file():
         os.chmod(path, 0o444)

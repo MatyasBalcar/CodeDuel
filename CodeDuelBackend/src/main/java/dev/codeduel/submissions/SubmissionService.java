@@ -43,7 +43,6 @@ public class SubmissionService {
       UUID battleId, UUID user, String language, String source, boolean official) {
     validateSource(language, source);
     lockQuota(user);
-    // The battle is the first aggregate row lock for both receipt allocation and finalization.
     var battle = battles.lock(battleId);
     battles.requireMember(battleId, user);
     Instant receivedAt = clock.now();

@@ -23,7 +23,7 @@ test('real Java duel: compiler feedback, hidden verdict and persisted replay', a
         .fill(process.env.DUEL_PASSWORD ?? 'CodeDuel-demo-2026!')
       await page.getByRole('button', { name: 'Sign in', exact: true }).click()
       await expect(
-        page.getByRole('heading', { name: `Good to see you, ${username}.` }),
+        page.getByRole('heading', { name: `Welcome back, ${username}.` }),
       ).toBeVisible()
     }
     await first.getByRole('button', { name: 'Challenge a friend', exact: true }).click()
@@ -42,8 +42,6 @@ test('real Java duel: compiler feedback, hidden verdict and persisted replay', a
       ),
     ) as { slug: string; referenceSource: string }[]
     const source = catalog.find((p) => p.slug === snapshot.problem.slug)!.referenceSource
-    // Monaco's native EditContext also has a hidden read-only IME textarea.
-    // Focus the accessible editor itself so keyboard input changes the source model.
     const editor = first.getByRole('textbox', { name: /Java solution editor/ })
     const selectAll = (await first.evaluate(() => navigator.userAgent.includes('Macintosh')))
       ? 'Meta+A'
@@ -72,7 +70,7 @@ test('real Java duel: compiler feedback, hidden verdict and persisted replay', a
     await expect(first.getByRole('heading', { name: 'That’s your win.' })).toBeVisible({
       timeout: 90_000,
     })
-    await expect(second.getByRole('heading', { name: 'A lesson for the next one.' })).toBeVisible()
+    await expect(second.getByRole('heading', { name: 'You lost' })).toBeVisible()
     await first.reload()
     await expect(first.getByRole('heading', { name: 'Battle replay' })).toBeVisible()
     await expect(first.getByText('Final result recorded')).toBeVisible()

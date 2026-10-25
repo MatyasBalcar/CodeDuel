@@ -1,4 +1,3 @@
-# Only toolchain/runtime files are visible inside each fresh sandbox.
 mount:
   - {type: bind, source: /usr, target: /usr, readonly: true}
   - {type: bind, source: /bin, target: /bin, readonly: true}

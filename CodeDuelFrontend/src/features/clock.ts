@@ -4,7 +4,7 @@ export function remainingSeconds(deadline: string | null, serverNow: number): nu
 }
 
 export function formatClock(seconds: number): string {
-  return `${Math.floor(seconds / 60)
-    .toString()
-    .padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`
+  const minutes = String(Math.floor(seconds / 60)).padStart(2, '0')
+  const remainder = String(seconds % 60).padStart(2, '0')
+  return `${minutes}:${remainder}`
 }

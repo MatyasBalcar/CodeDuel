@@ -20,7 +20,7 @@ export function loadDraft(key: string, fallback: string): string {
       return value.code
     localStorage.removeItem(key)
   } catch {
-    /* Storage is optional; editing still works without it. */
+    return fallback
   }
   return fallback
 }
@@ -36,9 +36,12 @@ export function saveDraft(key: string, code: string): boolean {
 
 export function clearDrafts(user: string) {
   try {
-    const keys = Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index))
-    for (const key of keys) if (key?.startsWith(`${PREFIX}${user}:`)) localStorage.removeItem(key)
+    const prefix = `${PREFIX}${user}:`
+    for (let index = localStorage.length - 1; index >= 0; index--) {
+      const key = localStorage.key(index)
+      if (key?.startsWith(prefix)) localStorage.removeItem(key)
+    }
   } catch {
-    /* Storage may be unavailable in a private browser. */
+    return
   }
 }

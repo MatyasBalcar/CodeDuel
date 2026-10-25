@@ -12,13 +12,14 @@ export function RatingHistory({ username }: { username: string }) {
   const values = events.length
     ? [events[0]!.oldRating, ...events.map((point) => point.newRating)]
     : []
-  const low = Math.min(...values) - 15
-  const high = Math.max(...values) + 15
+  const low = values.length ? Math.min(...values) - 15 : 0
+  const high = values.length ? Math.max(...values) + 15 : 1
   const points = values
-    .map(
-      (rating, i) =>
-        `${32 + (i * 696) / Math.max(1, values.length - 1)},${178 - ((rating - low) * 144) / (high - low)}`,
-    )
+    .map((rating, index) => {
+      const x = 32 + (index * 696) / Math.max(1, values.length - 1)
+      const y = 178 - ((rating - low) * 144) / (high - low)
+      return `${x},${y}`
+    })
     .join(' ')
   return (
     <section className="panel section-panel rating-history">
@@ -41,7 +42,7 @@ export function RatingHistory({ username }: { username: string }) {
             <polyline
               points={points}
               fill="none"
-              stroke="#237a5c"
+              stroke="currentColor"
               strokeWidth="3"
               strokeLinejoin="round"
             />

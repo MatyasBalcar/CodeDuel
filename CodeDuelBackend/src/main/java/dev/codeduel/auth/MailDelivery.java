@@ -30,23 +30,22 @@ public class MailDelivery {
 
   @Scheduled(fixedDelay = 1000, initialDelay = 5000)
   public void tick() {
-    outbox
-        .claim()
-        .ifPresent(
-            message -> {
-              boolean sent = false;
-              try {
-                var mail = new SimpleMailMessage();
-                mail.setFrom(from);
-                mail.setTo(message.recipient());
-                mail.setSubject(message.subject());
-                mail.setText(message.body());
-                sender.send(mail);
-                sent = true;
-              } catch (org.springframework.mail.MailException ignored) {
-                /* Never log addresses, links, credentials or transport bodies. */
-              }
-              outbox.finish(message, sent);
-            });
+    var pending = outbox.claim();
+    if (pending.isEmpty()) return;
+
+    var message = pending.get();
+    boolean sent;
+    try {
+      var mail = new SimpleMailMessage();
+      mail.setFrom(from);
+      mail.setTo(message.recipient());
+      mail.setSubject(message.subject());
+      mail.setText(message.body());
+      sender.send(mail);
+      sent = true;
+    } catch (org.springframework.mail.MailException ignored) {
+      sent = false;
+    }
+    outbox.finish(message, sent);
   }
 }

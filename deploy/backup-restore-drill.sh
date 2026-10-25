@@ -1,5 +1,4 @@
 #!/bin/sh
-# Logical backup plus a disposable restore drill. The live database is never overwritten.
 set -eu
 cd "$(dirname "$0")/.."
 umask 077
@@ -23,7 +22,6 @@ for table in users battles submissions rating_events battle_events problem_versi
   [ "$live" = "$restored" ] || { printf 'Restore mismatch in %s\n' "$table" >&2; exit 1; }
   printf '%s: %s rows verified\n' "$table" "$restored"
 done
-# Restore preserves the database's rating invariants and unique event keys.
 compose exec -T db psql -U postgres -d "$restore_database" -v ON_ERROR_STOP=1 -Atc \
   "DO \$\$ BEGIN IF EXISTS (SELECT 1 FROM rating_events WHERE new_rating <> old_rating + delta) THEN RAISE EXCEPTION 'invalid restored rating event'; END IF; END \$\$;"
 compose run --rm --no-deps -e "DATABASE_URL=jdbc:postgresql://db:5432/$restore_database" migrate

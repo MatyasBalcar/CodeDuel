@@ -14,7 +14,6 @@ values = dict(line.split('=', 1) for line in settings.read_text().splitlines()
 env = os.environ.copy()
 env['CODEDUEL_EXECUTOR_URL'] = 'http://127.0.0.1:5058'
 env['CODEDUEL_EXECUTOR_TOKEN'] = values['JUDGE_AUTH_TOKEN']
-# Testcontainers respects the active Docker context only after resolving its endpoint explicitly.
 if not env.get('DOCKER_HOST'):
     env['DOCKER_HOST'] = subprocess.check_output(
         ['docker', 'context', 'inspect', '--format', '{{.Endpoints.docker.Host}}'], text=True).strip()
