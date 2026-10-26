@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
-import { leaveCompetition } from './helpers'
+import { expectSignedIn, expectVerdict, expectWinner, leaveCompetition } from './helpers'
 
 const password = 'browser-test-password-2026'
 
@@ -9,7 +9,7 @@ async function register(page: Page, name: string) {
   await page.getByLabel('Email', { exact: true }).fill(`${name}@example.invalid`)
   await page.getByLabel('Password', { exact: true }).fill(password)
   await page.getByRole('button', { name: 'Create account', exact: true }).click()
-  await expect(page.getByRole('heading', { name: `Welcome back, ${name}.` })).toBeVisible()
+  await expectSignedIn(page, name)
 }
 
 async function readyBoth(first: Page, second: Page) {
@@ -48,17 +48,33 @@ test('private duel: registration, shared problem, wrong answer, draft recovery, 
     expect(own.startsAt).toBe(rival.startsAt)
     expect(own.endsAt).toBe(rival.endsAt)
     expect(own.problem.versionId).toBe(rival.problem.versionId)
+    const fixtures = (await (
+      await a.request.get(`/api/v1/demo/battles/${id}/fixtures`)
+    ).json()) as { acceptedSource: string }
 
     await first.getByLabel('Demo program').selectOption('wrong')
     await first.getByRole('button', { name: 'Run examples', exact: true }).click()
-    await expect(first.locator('.submission-row').first()).toContainText('wrong answer')
+    await expectVerdict(first, id, false, 'WRONG_ANSWER')
     await first.getByRole('button', { name: 'Submit solution', exact: true }).click()
-    await expect(
-      first.locator('.submission-row').filter({ hasText: 'Official submission' }).first(),
-    ).toContainText('wrong answer')
-    await expect(first.locator('.editor-status')).toContainText('Draft saved locally')
+    await expectVerdict(first, id, true, 'WRONG_ANSWER')
+    await first.getByLabel('Demo program').selectOption('accepted')
+    await expect
+      .poll(() =>
+        first.evaluate(
+          (source) =>
+            Object.keys(localStorage)
+              .filter((key) => key.startsWith('codeduel:draft:'))
+              .some((key) => JSON.parse(localStorage.getItem(key) ?? 'null')?.code === source),
+          fixtures.acceptedSource,
+        ),
+      )
+      .toBe(true)
     await first.reload()
-    await expect(first.locator('.monaco-editor')).toContainText('demo-wrong')
+    const firstBodyLine = fixtures.acceptedSource
+      .split('\n')
+      .find((line) => line.startsWith('    ') && line.trim())!
+      .trim()
+    await expect(first.locator('.monaco-editor')).toContainText(firstBodyLine)
     await expect(second.locator('.problem-statement h1')).toHaveText(title!)
     const snapshot = await (await a.request.get(`/api/v1/battles/${id}`)).json()
     expect(
@@ -67,14 +83,14 @@ test('private duel: registration, shared problem, wrong answer, draft recovery, 
 
     await first.getByLabel('Demo program').selectOption('accepted')
     await first.getByRole('button', { name: 'Submit solution', exact: true }).click()
-    await expect(first.getByRole('heading', { name: 'That’s your win.' })).toBeVisible()
-    await expect(second.getByRole('heading', { name: 'You lost' })).toBeVisible()
-    await expect(first.getByText('UNRANKED · NO RATING CHANGE')).toBeVisible()
-    await expect(first.getByRole('heading', { name: 'Battle replay' })).toBeVisible()
-    await expect(first.getByText('Final result recorded')).toBeVisible()
+    const result = await expectWinner(first, id, `p${suffix}a`)
+    expect(result.mode).toBe('PRIVATE')
+    expect(result.players.every((player) => player.delta === null)).toBe(true)
+    await expect(second.locator('.result-card')).toBeVisible()
+    await expect(first.locator('.replay-panel .timeline li').first()).toBeVisible()
     await first.reload()
-    await expect(first.getByRole('heading', { name: 'That’s your win.' })).toBeVisible()
-    await expect(first.getByText('Final result recorded')).toBeVisible()
+    await expectWinner(first, id, `p${suffix}a`)
+    await expect(first.locator('.replay-panel .timeline li').first()).toBeVisible()
     await first.getByRole('button', { name: 'Private rematch', exact: true }).click()
     await expect(first.getByLabel('PRIVATE INVITE LINK')).toBeVisible()
     await second.getByRole('button', { name: 'Accept rematch', exact: true }).click()
@@ -112,19 +128,16 @@ test('ranked duel: queue, judge completion, durable Elo, history and leaderboard
     await readyBoth(first, second)
     await first.getByLabel('Demo program').selectOption('accepted')
     await first.getByRole('button', { name: 'Submit solution', exact: true }).click()
-    await expect(first.getByRole('heading', { name: 'That’s your win.' })).toBeVisible()
-    await expect(first.getByText('+20 Elo', { exact: true })).toBeVisible()
-    await expect(second.getByText('-20 Elo', { exact: true })).toBeVisible()
     const id = first.url().split('/').at(-1)!
+    const result = await expectWinner(first, id, name)
+    expect(result.players.map((player) => player.delta)).toEqual(expect.arrayContaining([-20, 20]))
+    await expect(second.locator('.result-card')).toBeVisible()
     await first.reload()
-    await expect(first.getByText('+20 Elo', { exact: true })).toBeVisible()
-    const result = await (await a.request.get(`/api/v1/battles/${id}`)).json()
-    expect(
-      result.players.find((player: { username: string }) => player.username === name).newRating,
-    ).toBe(1220)
+    await expectWinner(first, id, name)
+    expect(result.players.find((player) => player.username === name)?.newRating).toBe(1220)
     await first.getByRole('link', { name: 'Your profile', exact: true }).click()
     await expect(first.locator('.profile-rating')).toContainText('1220')
-    await expect(first.locator('.history-row').first()).toContainText('Win')
+    await expect(first.locator('.history-row').first()).toHaveAttribute('href', `/arena/${id}`)
     await first.getByRole('link', { name: 'Leaderboard', exact: true }).click()
     await expect(first.locator('.leaderboard-table-row').filter({ hasText: name })).toContainText(
       '1220',
@@ -140,7 +153,7 @@ test('ranked duel: queue, judge completion, durable Elo, history and leaderboard
 test('library and mobile lobby stay readable without horizontal overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'CodeDuel' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await page.getByRole('link', { name: 'Challenges', exact: true }).click()
   await page.getByRole('textbox', { name: 'Search challenges' }).fill('signal')

@@ -1,7 +1,7 @@
 package dev.codeduel.problems;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -19,7 +19,8 @@ public class ProblemCatalog {
 
   public ProblemCatalog(ObjectMapper json) throws IOException {
     try (var input = new ClassPathResource("problems/catalog.json").getInputStream()) {
-      var versions = new java.util.ArrayList<>(json.readValue(input, new TypeReference<List<Content>>() {}));
+      var versions =
+          new java.util.ArrayList<>(json.readValue(input, new TypeReference<List<Content>>() {}));
       try (var functions = new ClassPathResource("problems/functions.json").getInputStream()) {
         versions.addAll(json.readValue(functions, new TypeReference<List<Content>>() {}));
       }

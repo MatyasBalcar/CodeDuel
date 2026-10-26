@@ -100,10 +100,15 @@ public final class GoJudgeGateway implements JudgeGateway {
     if (token == null) {
       var command = command(List.of("/bin/sh", "-c", COMPILE), "", 10000, 512);
       command.put("clockLimit", 15_000_000_000L);
-      command.put("copyIn", request.function() == null
-          ? Map.of("Main.java", Map.of("content", request.source()))
-          : Map.of("Main.java", Map.of("content", FunctionProgram.runner(request.function())),
-              "Solution.java", Map.of("content", request.source())));
+      command.put(
+          "copyIn",
+          request.function() == null
+              ? Map.of("Main.java", Map.of("content", request.source()))
+              : Map.of(
+                  "Main.java",
+                  Map.of("content", FunctionProgram.runner(request.function())),
+                  "Solution.java",
+                  Map.of("content", request.source())));
       command.put("copyOutCached", List.of("program.jar"));
       command.put("copyOutMax", 4 * 1024 * 1024);
       var result = run(command);

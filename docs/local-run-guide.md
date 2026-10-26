@@ -1,6 +1,6 @@
 # CodeDuel — local run guide
 
-Run shared commands from the project root, which contains both the backend and frontend folders. The supported submission language is **Java 21**, with a default-package `public class Main` reading stdin and writing stdout. The library contains 45 problems: 16 easy, 22 medium, and 7 hard, including familiar interview and contest exercises.
+Run shared commands from the project root, which contains both the backend and frontend folders. Write a **Java 21** `public class Solution` with the problem's `solve(...)` method. The judge passes named, typed arguments and checks the return value. The library contains 100 problems: 36 easy, 47 medium, and 17 hard. Signatures and examples are visible before joining a match. Older matches keep their original version and contract.
 
 ## Windows without Docker
 
@@ -207,6 +207,13 @@ Open a challenge and choose **Practice this challenge**. Drafts expire after sev
 For the provisioned administrator and immutable draft → real reference check → publish flow, use the [HTTPS deployment rehearsal](deployment-guide.md). Its separate database has an `operator` account and a generated password file, not a public default admin password. Fixture results cannot authorize publication.
 
 ## Verify
+
+On Windows, [testing locally](testing.md) shows how to run the same checks as GitHub
+Actions, including the Docker Engine in WSL setup:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\check.ps1 -Wsl -Browser
+```
 
 From the shared parent, JDK 21 selected and Docker running:
 

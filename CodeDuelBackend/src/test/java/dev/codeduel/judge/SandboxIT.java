@@ -141,26 +141,29 @@ class SandboxIT {
   }
 
   @Test
-  @Timeout(180)
+  @Timeout(600)
   void largestSeededInputOfEveryProblemPassesItsConfiguredSandboxLimits() throws Exception {
     var catalog = new dev.codeduel.problems.ProblemCatalog(new ObjectMapper());
     for (var problem : catalog.all()) {
       var largest =
           problem.cases().stream()
-              .max(java.util.Comparator.comparingInt(test -> test.input().length()))
+              .max(java.util.Comparator.comparingInt(test -> test.executionInput().length()))
               .orElseThrow();
       var request =
           new JudgeGateway.Request(
               problem.referenceSource(),
-              largest.input(),
+              largest.executionInput(),
               problem.timeLimitMs(),
-              problem.memoryLimitMb());
-      var compiled = gateway.evaluate(request, largest.output(), null);
+              problem.memoryLimitMb(),
+              problem.function());
+      var compiled = gateway.evaluate(request, largest.expectedOutput(), null);
       try {
         var result =
             compiled.result().verdict().terminal()
                 ? compiled.result()
-                : gateway.evaluate(request, largest.output(), compiled.executorToken()).result();
+                : gateway
+                    .evaluate(request, largest.expectedOutput(), compiled.executorToken())
+                    .result();
         assertThat(result.verdict())
             .as("%s largest input", problem.slug())
             .isEqualTo(Verdict.ACCEPTED);

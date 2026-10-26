@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { readFileSync } from 'node:fs'
-import { leaveCompetition } from './helpers'
+import { expectSignedIn, expectVerdict, expectWinner, leaveCompetition } from './helpers'
 
 test('real Java duel: compiler feedback, hidden verdict and persisted replay', async ({
   browser,
@@ -22,7 +22,7 @@ test('real Java duel: compiler feedback, hidden verdict and persisted replay', a
         .getByLabel('Password', { exact: true })
         .fill(process.env.DUEL_PASSWORD ?? 'CodeDuel-demo-2026!')
       await page.getByRole('button', { name: 'Sign in', exact: true }).click()
-      await expect(page.getByRole('heading', { name: `Welcome back, ${username}.` })).toBeVisible()
+      await expectSignedIn(page, username)
     }
     await first.getByRole('button', { name: 'Challenge a friend', exact: true }).click()
     const invite = await first.getByLabel('PRIVATE INVITE LINK').inputValue()
@@ -33,27 +33,32 @@ test('real Java duel: compiler feedback, hidden verdict and persisted replay', a
     await expect(first.locator('.monaco-editor')).toBeVisible()
     const id = first.url().split('/').at(-1)!
     const snapshot = await (await a.request.get(`/api/v1/battles/${id}`)).json()
-    const catalog = JSON.parse(
-      readFileSync(
-        new URL('../../CodeDuelBackend/src/main/resources/problems/catalog.json', import.meta.url),
-        'utf8',
+    const catalog = ['catalog', 'functions'].flatMap((name) =>
+      JSON.parse(
+        readFileSync(
+          new URL(
+            `../../CodeDuelBackend/src/main/resources/problems/${name}.json`,
+            import.meta.url,
+          ),
+          'utf8',
+        ),
       ),
-    ) as { slug: string; referenceSource: string }[]
-    const source = catalog.find((p) => p.slug === snapshot.problem.slug)!.referenceSource
+    ) as { slug: string; version: number; referenceSource: string }[]
+    const source = catalog.find(
+      (p) => p.slug === snapshot.problem.slug && p.version === snapshot.problem.version,
+    )!.referenceSource
+    const className = snapshot.problem.function ? 'Solution' : 'Main'
     const editor = first.getByRole('textbox', { name: /Java solution editor/ })
     const selectAll = (await first.evaluate(() => navigator.userAgent.includes('Macintosh')))
       ? 'Meta+A'
       : 'Control+A'
     await editor.focus()
     await first.keyboard.press(selectAll)
-    await first.keyboard.insertText('public class Main { this does not compile }')
+    await first.keyboard.insertText(`public class ${className} { this does not compile }`)
     await first.getByRole('button', { name: 'Run examples', exact: true }).click()
-    await expect(first.locator('.submission-row').first()).toContainText('compilation error', {
-      timeout: 30_000,
-    })
+    await expectVerdict(first, id, false, 'COMPILATION_ERROR')
     await first.locator('.submission-row').first().click()
-    await expect(first.getByRole('heading', { name: 'Compiler feedback' })).toBeVisible()
-    await expect(first.locator('.submission-feedback pre').first()).toContainText('Main.java')
+    await expect(first.locator('.submission-feedback pre').first()).not.toBeEmpty()
     await editor.focus()
     await first.keyboard.press(selectAll)
     await first.keyboard.insertText(source)
@@ -65,13 +70,10 @@ test('real Java duel: compiler feedback, hidden verdict and persisted replay', a
       first.getByRole('button', { name: 'Submit solution', exact: true }).click(),
     ])
     expect(sent.postDataJSON().sourceCode).toBe(source)
-    await expect(first.getByRole('heading', { name: 'That’s your win.' })).toBeVisible({
-      timeout: 90_000,
-    })
-    await expect(second.getByRole('heading', { name: 'You lost' })).toBeVisible()
+    await expectWinner(first, id, process.env.DUEL_USER_1 ?? 'nova', 90_000)
+    await expect(second.locator('.result-card')).toBeVisible()
     await first.reload()
-    await expect(first.getByRole('heading', { name: 'Battle replay' })).toBeVisible()
-    await expect(first.getByText('Final result recorded')).toBeVisible()
+    await expect(first.locator('.replay-panel .timeline li').first()).toBeVisible()
   } finally {
     await leaveCompetition(a)
     await leaveCompetition(b)

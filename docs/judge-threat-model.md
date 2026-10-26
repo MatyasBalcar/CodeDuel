@@ -29,7 +29,7 @@ The supervisor is privileged inside its dedicated VM to create namespaces/cgroup
 
 ## Measured local evidence
 
-The real sandbox suite exercises correct/incorrect Java, bounded compilation feedback, hidden stderr, infinite loops, memory pressure, huge stdout, blocked network/metadata/database connections, inaccessible host/secret paths, writable-state cleanup, thread exhaustion and subsequent healthy execution. It also runs the largest input of every original problem under that problem's configured limits. Database tests cover stale-worker fencing, retries, duplicate finalization and reverse completion order. The release verifier restarts API/worker around persistent sessions/jobs.
+The real sandbox suite exercises correct/incorrect Java, bounded compilation feedback, hidden stderr, infinite loops, memory pressure, huge stdout, blocked network/metadata/database connections, inaccessible host/secret paths, writable-state cleanup, thread exhaustion and subsequent healthy execution. It also runs the largest input of every seeded problem version under that problem's configured limits. Database tests cover stale-worker fencing, retries, duplicate finalization and reverse completion order. The release verifier restarts API/worker around persistent sessions/jobs.
 
 These are functional/adversarial checks of this local setup, not proof against all JVM/kernel exploits or a penetration audit. A public host still needs patched/reproducible VM images, provider firewall/egress verification, monitored capacity, abuse response and deployment-specific review. Host Java packages are recorded exactly at install; update and retest them through a controlled release.
 

@@ -105,7 +105,7 @@ class Judge0GatewayTest {
 
   @Test
   void rejectsHostileOrOversizedResponsesBeforePersistingFeedback() {
-    response.set("x".repeat(140000));
+    response.set("x".repeat(1100000));
     assertThatThrownBy(() -> gateway.poll(TOKEN, "answer"))
         .isInstanceOf(JudgeUnavailableException.class);
     response.set("{\"status\":{\"id\":3},\"stdout\":\"not-base64!\"}");
@@ -126,5 +126,34 @@ class Judge0GatewayTest {
         "{\"status\":{\"id\":3},\"time\":\"0.015\",\"memory\":123,\"stdout\":\""
             + Base64.getEncoder().encodeToString(value.getBytes(StandardCharsets.UTF_8))
             + "\"}");
+  }
+
+  @Test
+  void sendsAFunctionDriverAndChecksTheReturnedValue() throws Exception {
+    var function =
+        new dev.codeduel.problems.JavaFunction(
+            "String",
+            java.util.List.of(new dev.codeduel.problems.JavaFunction.Parameter("text", "String")));
+    var request =
+        new JudgeGateway.Request(
+            "public class Solution { public String solve(String text) { return text; } }",
+            "{\"text\":\"a  b\"}",
+            2000,
+            256,
+            function);
+    response.set("{\"token\":\"" + TOKEN + "\"}");
+    gateway.start(request);
+    var payload = json.readTree(sent.get());
+    String driver =
+        new String(
+            Base64.getDecoder().decode(payload.get("source_code").asText()),
+            StandardCharsets.UTF_8);
+    assertThat(driver).contains("new Solution().solve(").doesNotContain("__ARGUMENTS__");
+    assertThat(payload.has("additional_files")).isTrue();
+    output("\"a  b\"");
+    assertThat(gateway.evaluate(request, "\"a  b\"", TOKEN).result().verdict())
+        .isEqualTo(Verdict.ACCEPTED);
+    assertThat(gateway.evaluate(request, "\"a b\"", TOKEN).result().verdict())
+        .isEqualTo(Verdict.WRONG_ANSWER);
   }
 }

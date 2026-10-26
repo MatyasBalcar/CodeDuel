@@ -6,7 +6,7 @@ import { api } from '../../api/client'
 import { useSystem } from '../../api/hooks'
 import type { Battle, Problem, Profile } from '../../api/types'
 import { Avatar, ErrorNotice, Loading } from '../../components/Feedback'
-import { ProblemStatement } from '../ProblemsPage'
+import { ProblemExample, ProblemStatement } from '../ProblemsPage'
 import { formatClock, remainingSeconds } from '../clock'
 import { draftKey, loadDraft, saveDraft } from '../drafts'
 import { ForfeitDialog } from './ForfeitDialog'
@@ -130,7 +130,7 @@ export function SolutionWorkspace({
           <div className="editor-toolbar">
             <span>
               <FileCode2 size={15} />
-              Main.java
+              {problem.function ? 'Solution.java' : 'Main.java'}
             </span>
             <span className="editor-language">Java 21</span>
             <button
@@ -237,12 +237,7 @@ export function SolutionWorkspace({
               {problem.examples.map((example, i) => (
                 <div key={i}>
                   <strong>Example {i + 1}</strong>
-                  <p>
-                    Input <code>{example.input.trim() || '(empty)'}</code>
-                  </p>
-                  <p>
-                    Expected <code>{example.output.trim()}</code>
-                  </p>
+                  <ProblemExample example={example} functionBased={!!problem.function} />
                 </div>
               ))}
             </div>
@@ -256,7 +251,7 @@ export function SolutionWorkspace({
                     <VerdictLabel verdict={submission.verdict} />
                     <time>{new Date(submission.receivedAt).toLocaleTimeString()}</time>
                   </summary>
-                  <SubmissionFeedback id={submission.id} />
+                  <SubmissionFeedback id={submission.id} functionBased={!!problem.function} />
                 </details>
               ))}
             </div>

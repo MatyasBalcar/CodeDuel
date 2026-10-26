@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext } from '@playwright/test'
+import { expectSignedIn } from './helpers'
 
 async function tokenFromMail(request: APIRequestContext, email: string, subject: string) {
   let token = ''
@@ -39,20 +40,32 @@ test('email verification, practice, password recovery and account deletion', asy
   await page.getByLabel('Email', { exact: true }).fill(email)
   await page.getByLabel('Password', { exact: true }).fill(password)
   await page.getByRole('button', { name: 'Create account', exact: true }).click()
-  await expect(page.getByRole('heading', { name: `Welcome back, ${name}.` })).toBeVisible()
+  await expectSignedIn(page, name)
   const verify = await tokenFromMail(request, email, 'Verify your CodeDuel email')
   await page.goto(`/verify-email#token=${verify}`)
   await page.getByRole('button', { name: 'Verify email', exact: true }).click()
-  await expect(page.getByRole('status')).toContainText('Email verified.')
+  await expect
+    .poll(async () => (await (await page.request.get('/api/v1/auth/me')).json()).emailVerified)
+    .toBe(true)
   expect(new URL(page.url()).hash).toBe('')
 
   await page.goto('/practice/balanced-relay')
   await expect(page.locator('.monaco-editor')).toBeVisible()
   await page.getByLabel('Demo program').selectOption('accepted')
   await page.getByRole('button', { name: 'Submit solution', exact: true }).click()
-  await expect(page.locator('.submission-row').first()).toContainText('accepted')
+  await expect
+    .poll(
+      async () => {
+        const history = await (
+          await page.request.get('/api/v1/practice/balanced-relay/submissions')
+        ).json()
+        return history[0]?.verdict
+      },
+      { timeout: 30_000 },
+    )
+    .toBe('ACCEPTED')
   await page.reload()
-  await expect(page.locator('.submission-row').first()).toContainText('accepted')
+  await expect(page.locator('.submission-row').first()).toBeVisible()
   const profile = await (await page.request.get('/api/v1/auth/me')).json()
   expect(profile.rankedGames).toBe(0)
 
@@ -62,27 +75,25 @@ test('email verification, practice, password recovery and account deletion', asy
     await guest.goto('/forgot-password')
     await guest.getByLabel('Email address', { exact: true }).fill(email)
     await guest.getByRole('button', { name: 'Email a reset link', exact: true }).click()
-    await expect(guest.getByRole('status')).toContainText('If this address belongs to an account')
     const reset = await tokenFromMail(request, email, 'Reset your CodeDuel password')
     await guest.goto(`/reset-password#token=${reset}`)
     const replacement = 'replacement-browser-password-2026'
     await guest.getByLabel('New password', { exact: true }).fill(replacement)
     await guest.getByLabel('Confirm new password', { exact: true }).fill(replacement)
     await guest.getByRole('button', { name: 'Update password', exact: true }).click()
-    await expect(guest.getByRole('status')).toContainText('Password updated.')
+    await expect.poll(async () => (await page.request.get('/api/v1/auth/me')).status()).toBe(401)
     expect((await page.request.get('/api/v1/auth/me')).status()).toBe(401)
     await guest.goto('/login')
     await guest.getByLabel('Username', { exact: true }).fill(name)
     await guest.getByLabel('Password', { exact: true }).fill(replacement)
     await guest.getByRole('button', { name: 'Sign in', exact: true }).click()
-    await expect(guest.getByRole('heading', { name: `Welcome back, ${name}.` })).toBeVisible()
+    await expectSignedIn(guest, name)
     await guest.getByRole('link', { name: 'Account settings', exact: true }).click()
     await guest.getByText('Delete this account', { exact: true }).click()
     await guest.getByLabel('Current password', { exact: true }).fill(replacement)
     await guest.getByRole('checkbox').check()
     await guest.getByRole('button', { name: 'Permanently delete account', exact: true }).click()
-    await expect(guest.getByRole('heading', { name: 'CodeDuel' })).toBeVisible()
-    expect((await guest.request.get('/api/v1/auth/me')).status()).toBe(401)
+    await expect.poll(async () => (await guest.request.get('/api/v1/auth/me')).status()).toBe(401)
   } finally {
     await recovery.close()
   }

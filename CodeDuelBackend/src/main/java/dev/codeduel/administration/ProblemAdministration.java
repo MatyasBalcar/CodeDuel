@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.codeduel.common.ApiException;
 import dev.codeduel.common.AuditLog;
 import dev.codeduel.common.Sql;
+import dev.codeduel.problems.JavaFunction;
 import dev.codeduel.problems.ProblemCatalog;
 import dev.codeduel.submissions.SubmissionService;
 import jakarta.validation.Valid;
@@ -89,11 +90,15 @@ public class ProblemAdministration {
                             rs.getString("input_format"),
                             rs.getString("output_format"),
                             rs.getString("starter_code"),
-                            reference(rs.getString("reference_source"), rs.getString("slug")),
+                            reference(
+                                rs.getString("reference_source"),
+                                rs.getString("slug"),
+                                rs.getInt("version")),
                             rs.getInt("time_limit_ms"),
                             rs.getInt("memory_limit_mb"),
                             rs.getInt("duration_seconds"),
-                            tests(version)),
+                            tests(version),
+                            JavaFunction.read(rs.getString("function_contract"), json)),
                         verification(version)))
             .optional()
             .orElseThrow(ApiException::notFound);
@@ -133,7 +138,8 @@ public class ProblemAdministration {
             """
         UPDATE problem_versions SET statement=:statement,constraints_text=:constraints,input_format=:input,
           output_format=:output,starter_code=:starter,reference_source=:reference,time_limit_ms=:time,
-          memory_limit_mb=:memory,duration_seconds=:duration,content_sha256=:checksum WHERE id=:id
+          memory_limit_mb=:memory,duration_seconds=:duration,content_sha256=:checksum,
+          function_contract=CAST(:function AS jsonb) WHERE id=:id
         """)
         .param("id", version)
         .param("statement", draft.statement())
@@ -146,9 +152,10 @@ public class ProblemAdministration {
         .param("memory", draft.memoryLimitMb())
         .param("duration", draft.durationSeconds())
         .param("checksum", checksum(draft))
+        .param("function", functionJson(draft.function()))
         .update();
     jdbc.sql("DELETE FROM test_cases WHERE problem_version_id = :id").param("id", version).update();
-    insertTests(version, draft.tests());
+    insertTests(version, draft);
     audit.append(actor, "DRAFT_UPDATED", "PROBLEM_VERSION", version);
   }
 
@@ -248,8 +255,8 @@ public class ProblemAdministration {
     jdbc.sql(
             """
         INSERT INTO problem_versions(id,problem_id,version,status,statement,constraints_text,input_format,output_format,
-          starter_code,reference_source,content_sha256,time_limit_ms,memory_limit_mb,duration_seconds)
-        VALUES (:id,:problem,:version,'DRAFT',:statement,:constraints,:input,:output,:starter,:reference,:checksum,:time,:memory,:duration)
+          starter_code,reference_source,content_sha256,time_limit_ms,memory_limit_mb,duration_seconds,function_contract)
+        VALUES (:id,:problem,:version,'DRAFT',:statement,:constraints,:input,:output,:starter,:reference,:checksum,:time,:memory,:duration,CAST(:function AS jsonb))
         """)
         .param("id", version)
         .param("problem", problem)
@@ -264,8 +271,9 @@ public class ProblemAdministration {
         .param("time", draft.timeLimitMs())
         .param("memory", draft.memoryLimitMb())
         .param("duration", draft.durationSeconds())
+        .param("function", functionJson(draft.function()))
         .update();
-    insertTests(version, draft.tests());
+    insertTests(version, draft);
     return version;
   }
 
@@ -279,15 +287,19 @@ public class ProblemAdministration {
         .update();
   }
 
-  private void insertTests(UUID version, List<Test> tests) {
+  private void insertTests(UUID version, Draft draft) {
+    List<Test> tests = draft.tests();
+    boolean function = draft.function() != null;
     for (int i = 0; i < tests.size(); i++) {
       Test test = tests.get(i);
       jdbc.sql(
-              "INSERT INTO test_cases(id,problem_version_id,input_data,expected_output,is_public,ordinal) VALUES (:id,:version,:input,:output,:public,:ordinal)")
+              "INSERT INTO test_cases(id,problem_version_id,input_data,expected_output,is_public,ordinal,arguments,expected_value) VALUES (:id,:version,:input,:output,:public,:ordinal,CAST(:arguments AS jsonb),CAST(:expected AS jsonb))")
           .param("id", UUID.randomUUID())
           .param("version", version)
-          .param("input", test.input())
-          .param("output", test.output())
+          .param("input", function ? "" : test.input())
+          .param("output", function ? "" : test.output())
+          .param("arguments", function ? test.input() : null)
+          .param("expected", function ? test.output() : null)
           .param("public", test.isPublic())
           .param("ordinal", i)
           .update();
@@ -296,7 +308,7 @@ public class ProblemAdministration {
 
   private List<Test> tests(UUID version) {
     return jdbc.sql(
-            "SELECT input_data,expected_output,is_public FROM test_cases WHERE problem_version_id=:id ORDER BY ordinal")
+            "SELECT COALESCE(arguments::text,input_data) AS input_data,COALESCE(expected_value::text,expected_output) AS expected_output,is_public FROM test_cases WHERE problem_version_id=:id ORDER BY ordinal")
         .param("id", version)
         .query(
             (rs, row) ->
@@ -316,12 +328,48 @@ public class ProblemAdministration {
         .orElse(null);
   }
 
-  private String reference(String stored, String slug) {
+  private String reference(String stored, String slug, int version) {
     if (stored != null) return stored;
-    return seeds.find(slug).map(ProblemCatalog.Content::referenceSource).orElse("");
+    return seeds.find(slug, version).map(ProblemCatalog.Content::referenceSource).orElse("");
+  }
+
+  private String functionJson(JavaFunction function) {
+    if (function == null) return null;
+    try {
+      return json.writeValueAsString(function);
+    } catch (java.io.IOException ex) {
+      throw new IllegalStateException("Cannot save the function contract", ex);
+    }
   }
 
   private void validate(Draft draft) {
+    for (var test : draft.tests()) {
+      if (test.input() == null || test.output() == null)
+        throw ApiException.conflict(
+            "INVALID_TEST", "Provide arguments and an expected result for every case.");
+      if (draft.function() != null) {
+        try {
+          var reader =
+              json.reader()
+                  .with(
+                      com.fasterxml.jackson.databind.DeserializationFeature
+                          .FAIL_ON_TRAILING_TOKENS);
+          draft.function().validateArguments(reader.readTree(test.input()));
+          draft.function().validateExpected(reader.readTree(test.output()));
+        } catch (java.io.IOException ex) {
+          throw ApiException.conflict(
+              "INVALID_TEST", "Use valid JSON arguments and expected return values.");
+        } catch (IllegalArgumentException ex) {
+          throw ApiException.conflict("INVALID_TEST", ex.getMessage());
+        }
+      }
+      String input = test.input();
+      String output = test.output();
+      if (input.getBytes(StandardCharsets.UTF_8).length > 2097152
+          || output.getBytes(StandardCharsets.UTF_8).length > 262144)
+        throw ApiException.conflict(
+            "TEST_TOO_LARGE", "Arguments must fit in 2 MiB and results in 256 KiB.");
+    }
     if (draft.tests().stream().noneMatch(Test::isPublic)
         || draft.tests().stream().allMatch(Test::isPublic))
       throw ApiException.conflict(
@@ -373,10 +421,11 @@ public class ProblemAdministration {
       @Min(100) @Max(10000) int timeLimitMs,
       @Min(128) @Max(512) int memoryLimitMb,
       @Min(60) @Max(1800) int durationSeconds,
-      @NotNull @Size(min = 2, max = 100) List<@Valid Test> tests) {}
+      @NotNull @Size(min = 2, max = 100) List<@Valid Test> tests,
+      JavaFunction function) {}
 
   public record Test(
       @NotNull @Size(max = 2097152) String input,
-      @NotNull @Size(max = 65536) String output,
+      @NotNull @Size(max = 262144) String output,
       @com.fasterxml.jackson.annotation.JsonProperty("public") boolean isPublic) {}
 }

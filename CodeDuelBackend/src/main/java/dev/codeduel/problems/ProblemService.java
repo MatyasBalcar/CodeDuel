@@ -1,10 +1,10 @@
 package dev.codeduel.problems;
 
-import dev.codeduel.common.ApiException;
-import dev.codeduel.common.Sql;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import dev.codeduel.common.ApiException;
+import dev.codeduel.common.Sql;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -57,23 +57,24 @@ public class ProblemService {
         .param("id", versionId)
         .query(
             (rs, row) -> {
-                var function = JavaFunction.read(rs.getString("function_contract"), json);
-                return new Detail(
-                    versionId,
-                    rs.getString("slug"),
-                    rs.getString("title"),
-                    rs.getString("difficulty"),
-                    Arrays.asList((String[]) rs.getArray("tags").getArray()),
-                    rs.getInt("version"),
-                    rs.getString("statement"),
-                    rs.getString("constraints_text"),
-                    rs.getString("input_format"),
-                    rs.getString("output_format"),
-                    rs.getString("starter_code"),
-                    rs.getInt("time_limit_ms"),
-                    rs.getInt("memory_limit_mb"),
-                    rs.getInt("duration_seconds"),
-                    examples(versionId, function != null), function);
+              var function = JavaFunction.read(rs.getString("function_contract"), json);
+              return new Detail(
+                  versionId,
+                  rs.getString("slug"),
+                  rs.getString("title"),
+                  rs.getString("difficulty"),
+                  Arrays.asList((String[]) rs.getArray("tags").getArray()),
+                  rs.getInt("version"),
+                  rs.getString("statement"),
+                  rs.getString("constraints_text"),
+                  rs.getString("input_format"),
+                  rs.getString("output_format"),
+                  rs.getString("starter_code"),
+                  rs.getInt("time_limit_ms"),
+                  rs.getInt("memory_limit_mb"),
+                  rs.getInt("duration_seconds"),
+                  examples(versionId, function != null),
+                  function);
             })
         .optional()
         .orElseThrow(ApiException::notFound);
@@ -84,7 +85,10 @@ public class ProblemService {
             "SELECT COALESCE(arguments::text,input_data) AS input_data, COALESCE(expected_value::text,expected_output) AS expected_output FROM test_cases WHERE problem_version_id = :id AND is_public ORDER BY ordinal")
         .param("id", versionId)
         .query(
-            (rs, row) -> new Example(exampleValue(rs.getString("input_data"), function), exampleValue(rs.getString("expected_output"), function)))
+            (rs, row) ->
+                new Example(
+                    exampleValue(rs.getString("input_data"), function),
+                    exampleValue(rs.getString("expected_output"), function)))
         .list();
   }
 

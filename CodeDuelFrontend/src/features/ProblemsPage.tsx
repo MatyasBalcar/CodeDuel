@@ -31,7 +31,7 @@ export function ProblemsPage() {
             onChange={(event) => setSearch(event.target.value)}
           />
         </label>
-        <span className="muted">Java 21 · standard input / output</span>
+        <span className="muted">Java 21 · function arguments and return values</span>
       </div>
       <ErrorNotice error={problems.error} />
       {problems.isPending ? (
@@ -118,27 +118,63 @@ export function ProblemStatement({ problem }: { problem: Problem }) {
         ))}
       </div>
       <p className="statement-body">{problem.statement}</p>
-      <h3>Input</h3>
+      {problem.function && (
+        <>
+          <h3>Function</h3>
+          <pre>{`${problem.function.returnType} solve(${problem.function.parameters.map((parameter) => `${parameter.type} ${parameter.name}`).join(', ')})`}</pre>
+        </>
+      )}
+      <h3>{problem.function ? 'Arguments' : 'Input'}</h3>
       <p>{problem.inputFormat}</p>
-      <h3>Output</h3>
+      <h3>{problem.function ? 'Return value' : 'Output'}</h3>
       <p>{problem.outputFormat}</p>
       <h3>Examples</h3>
       {problem.examples.map((example, i) => (
         <div className="example" key={i}>
           <div className="example-title">Example {i + 1}</div>
-          <span>Input</span>
-          <pre>{example.input || '(empty line)'}</pre>
-          <span>Output</span>
-          <pre>{example.output}</pre>
+          <ProblemExample example={example} functionBased={!!problem.function} />
         </div>
       ))}
       <h3>Constraints</h3>
       <p>{problem.constraints}</p>
       <div className="contract-note">
-        Write a <code>public class Main</code> with a <code>main</code> method. Read standard input
-        and print your answer. Output is compared as case-sensitive tokens; whitespace between
-        tokens is ignored.
+        {problem.function ? (
+          <>
+            Implement <code>solve</code> in <code>public class Solution</code>. The judge passes the
+            arguments and checks your return value. Array order and whitespace inside strings
+            matter.
+          </>
+        ) : (
+          <>
+            Write a <code>public class Main</code> with a <code>main</code> method. Read standard
+            input and print your answer. Whitespace between output tokens is ignored.
+          </>
+        )}
       </div>
     </article>
+  )
+}
+
+export function ProblemExample({
+  example,
+  functionBased,
+}: {
+  example: Problem['examples'][number]
+  functionBased: boolean
+}) {
+  const input = example.input
+  const argumentsText =
+    functionBased && input && typeof input === 'object' && !Array.isArray(input)
+      ? Object.entries(input)
+          .map(([name, value]) => `${name} = ${JSON.stringify(value)}`)
+          .join('\n')
+      : String(input ?? '')
+  return (
+    <>
+      <span>{functionBased ? 'Arguments' : 'Input'}</span>
+      <pre>{argumentsText || (functionBased ? '(no arguments)' : '(empty line)')}</pre>
+      <span>{functionBased ? 'Returns' : 'Output'}</span>
+      <pre>{functionBased ? JSON.stringify(example.output) : String(example.output ?? '')}</pre>
+    </>
   )
 }

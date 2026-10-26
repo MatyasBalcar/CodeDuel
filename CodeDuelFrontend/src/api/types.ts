@@ -26,6 +26,14 @@ export interface ProblemSummary {
   durationSeconds: number
 }
 
+export type JsonValue =
+  string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue }
+
+export interface JavaFunction {
+  returnType: string
+  parameters: { name: string; type: string }[]
+}
+
 export interface Problem extends Omit<ProblemSummary, 'id'> {
   versionId: string
   version: number
@@ -36,7 +44,8 @@ export interface Problem extends Omit<ProblemSummary, 'id'> {
   starterCode: string
   timeLimitMs: number
   memoryLimitMb: number
-  examples: { input: string; output: string }[]
+  function?: JavaFunction | null
+  examples: { input: JsonValue; output: JsonValue }[]
 }
 
 export interface QueueState {

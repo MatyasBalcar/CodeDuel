@@ -89,6 +89,7 @@ catalog = [
 from extended_catalog import build_extra
 from common_catalog import build_common
 from classic_catalog import build_classics
+from functions_catalog import build_functions
 
 catalog.extend(build_extra(problem, case))
 catalog.extend(build_common(problem, case))
@@ -96,4 +97,8 @@ catalog.extend(build_classics(problem, case))
 
 DESTINATION.parent.mkdir(parents=True, exist_ok=True)
 DESTINATION.write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
-print(f"Built {len(catalog)} problems with {sum(len(p['cases']) for p in catalog)} cases.")
+functions = build_functions(catalog)
+DESTINATION.with_name('functions.json').write_text(
+    '[\n' + ',\n'.join(json.dumps(problem, ensure_ascii=False, separators=(',', ':')) for problem in functions) + '\n]\n',
+    encoding='utf-8', newline='\n')
+print(f"Built {len(functions)} function problems with {sum(len(p['cases']) for p in functions)} cases; kept the original versions.")

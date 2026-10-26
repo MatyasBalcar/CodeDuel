@@ -83,7 +83,9 @@ public class ProblemSeed implements ApplicationRunner {
           .param("time", content.timeLimitMs())
           .param("memory", content.memoryLimitMb())
           .param("reference", content.referenceSource())
-          .param("function", content.function() == null ? null : json.writeValueAsString(content.function()))
+          .param(
+              "function",
+              content.function() == null ? null : json.writeValueAsString(content.function()))
           .param("duration", content.durationSeconds())
           .update();
       for (int ordinal = 0; ordinal < content.cases().size(); ordinal++) {

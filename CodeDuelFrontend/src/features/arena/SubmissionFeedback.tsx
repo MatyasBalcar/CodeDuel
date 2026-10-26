@@ -3,7 +3,13 @@ import { api } from '../../api/client'
 import { ErrorNotice, Loading } from '../../components/Feedback'
 import { VerdictLabel } from './VerdictLabel'
 
-export function SubmissionFeedback({ id }: { id: string }) {
+export function SubmissionFeedback({
+  id,
+  functionBased = false,
+}: {
+  id: string
+  functionBased?: boolean
+}) {
   const detail = useQuery({
     queryKey: ['submission', id],
     queryFn: () => api.submission(id),
@@ -25,7 +31,16 @@ export function SubmissionFeedback({ id }: { id: string }) {
         <div key={example.ordinal}>
           <strong>Public example {index + 1}</strong>{' '}
           {example.verdict ? <VerdictLabel verdict={example.verdict} /> : <span>Waiting</span>}
-          {example.stdout && <pre aria-label={`Example ${index + 1} output`}>{example.stdout}</pre>}
+          {example.stdout && (
+            <>
+              <span>{functionBased ? 'Returned value' : 'Output'}</span>
+              <pre
+                aria-label={`Example ${index + 1} ${functionBased ? 'returned value' : 'output'}`}
+              >
+                {example.stdout}
+              </pre>
+            </>
+          )}
         </div>
       ))}
       <p className="muted">Hidden inputs, expected answers and execution output are private.</p>

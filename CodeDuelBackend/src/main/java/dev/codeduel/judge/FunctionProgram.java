@@ -15,11 +15,21 @@ public final class FunctionProgram {
   private FunctionProgram() {}
 
   public static String runner(JavaFunction function) {
-    String arguments = function.parameters().stream()
-        .map(parameter -> "(" + parameter.type() + ") convert(arguments.get(\""
-            + parameter.name() + "\"), \"" + parameter.type() + "\")")
-        .collect(java.util.stream.Collectors.joining(", "));
-    return TEMPLATE.replace("__RETURN_TYPE__", function.returnType()).replace("__ARGUMENTS__", arguments);
+    String arguments =
+        function.parameters().stream()
+            .map(
+                parameter ->
+                    "("
+                        + parameter.type()
+                        + ") convert(arguments.get(\""
+                        + parameter.name()
+                        + "\"), \""
+                        + parameter.type()
+                        + "\")")
+            .collect(java.util.stream.Collectors.joining(", "));
+    return TEMPLATE
+        .replace("__RETURN_TYPE__", function.returnType())
+        .replace("__ARGUMENTS__", arguments);
   }
 
   public static String additionalFiles(String source) {

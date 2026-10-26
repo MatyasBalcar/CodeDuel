@@ -75,8 +75,14 @@ public final class Judge0Gateway implements JudgeGateway {
     }
     var body = new LinkedHashMap<String, Object>();
     body.put("language_id", settings.javaLanguageId());
-    body.put("source_code", encode(request.function() == null ? request.source() : FunctionProgram.runner(request.function())));
-    if (request.function() != null) body.put("additional_files", FunctionProgram.additionalFiles(request.source()));
+    body.put(
+        "source_code",
+        encode(
+            request.function() == null
+                ? request.source()
+                : FunctionProgram.runner(request.function())));
+    if (request.function() != null)
+      body.put("additional_files", FunctionProgram.additionalFiles(request.source()));
     body.put("stdin", encode(request.input()));
     body.put("cpu_time_limit", request.timeLimitMs() / 1000.0);
     body.put("wall_time_limit", Math.min(20, request.timeLimitMs() / 1000.0 + 5));
@@ -119,7 +125,8 @@ public final class Judge0Gateway implements JudgeGateway {
     Verdict verdict =
         switch (status) {
           case 3 ->
-              JudgeOutput.matches(decode(response.path("stdout").asText("")), expectedOutput, function)
+              JudgeOutput.matches(
+                      decode(response.path("stdout").asText("")), expectedOutput, function)
                   ? Verdict.ACCEPTED
                   : Verdict.WRONG_ANSWER;
           case 4 -> Verdict.WRONG_ANSWER;

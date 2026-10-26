@@ -83,7 +83,7 @@ function PracticeWorkspace({ problem, user }: { problem: Problem; user: Profile 
         </section>
         <section className="panel practice-editor">
           <div className="editor-toolbar">
-            <strong>Main.java</strong>
+            <strong>{problem.function ? 'Solution.java' : 'Main.java'}</strong>
             <span className="editor-language">Java 21</span>
           </div>
           {fixtures.data && (
@@ -155,7 +155,7 @@ function PracticeWorkspace({ problem, user }: { problem: Problem; user: Profile 
                 <VerdictLabel verdict={entry.verdict} />
                 <time>{new Date(entry.receivedAt).toLocaleString()}</time>
               </summary>
-              <SubmissionFeedback id={entry.id} />
+              <SubmissionFeedback id={entry.id} functionBased={!!problem.function} />
             </details>
           ))
         ) : (

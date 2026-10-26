@@ -1,12 +1,12 @@
 package dev.codeduel.judge;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.codeduel.battles.BattleStore;
 import dev.codeduel.battles.FinalizeBattleService;
 import dev.codeduel.common.Sql;
 import dev.codeduel.events.BattleEvents;
-import dev.codeduel.submissions.Verdict;
 import dev.codeduel.problems.JavaFunction;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.codeduel.submissions.Verdict;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +25,11 @@ public class JudgeJobStore {
   private final ObjectMapper json;
 
   public JudgeJobStore(
-      JdbcClient jdbc, BattleStore battles, BattleEvents events, FinalizeBattleService finalizer, ObjectMapper json) {
+      JdbcClient jdbc,
+      BattleStore battles,
+      BattleEvents events,
+      FinalizeBattleService finalizer,
+      ObjectMapper json) {
     this.jdbc = jdbc;
     this.battles = battles;
     this.events = events;

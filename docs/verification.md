@@ -65,6 +65,39 @@ its Prettier check.
 This run checked content and reference solutions. The earlier application and sandbox
 evidence above covers the original library; those checks were not rerun for this expansion.
 
+## Function problems and local CI checks (2026-10-26)
+
+The library now has 100 problems: 36 easy, 47 medium, and 17 hard. All current
+versions use named function arguments and return values. The original v1 catalog
+and migrations V1-V8 are unchanged; v2 adds the function contract and structured
+cases. Both generated resources reproduce byte for byte.
+
+On Windows with Node 24 and Docker Engine in Ubuntu WSL, these checks passed:
+
+- Maven `verify` with Java 21.0.12.1: 45 unit tests and 36 PostgreSQL integration
+  executions passed; 13 checks requiring a separate real executor were skipped.
+- All 3,654 trusted reference cases passed on Java 21: 1,827 legacy cases and
+  1,827 function cases. Function references use the judge's actual driver template.
+- Frontend formatting, ESLint, TypeScript, production build, all 7 retained unit
+  tests, and the dependency audit passed. The audit reported no vulnerabilities.
+- Five Chromium journeys passed against a fresh, separate Docker test database:
+  accessibility, account recovery and practice, private duels with draft recovery
+  and rematches, ranked ratings and history, and mobile library navigation. The
+  real-executor and administrator journeys were skipped without their configuration.
+- Every one of the 100 live library endpoints returned a v2 function contract and
+  named argument objects before any match. The README screenshot is from that app.
+
+Three copy-only component tests were removed. Browser assertions now use session,
+verdict, winner, rating, and replay state. Catalog checks validate the data and
+preserve published checksums without fixing descriptive text or library counts.
+The adjusted catalog and library integration tests passed again after that cleanup.
+
+`scripts/check.ps1` runs the workflow stages locally. Both it and GitHub Actions
+use `docker-compose.test.yml` for browser tests, wait until seed users exist, and
+remove only their temporary test stack. See [testing locally](testing.md).
+These results cover the ordinary CI checks; the real sandbox was not provisioned
+or rerun on this Windows machine.
+
 ## Limits
 
 The tested topology is one API, one trusted worker and one execution VM. Public-host routing/firewalls, encrypted provider SMTP, DNS/certificates, scheduled encrypted backups, deployed monitoring, abuse response and sandbox patch review remain operator-specific launch work. Adversarial examples are evidence for controls, not proof against all JVM/kernel escapes. Exactly-once external execution is not claimed; fencing and database constraints enforce idempotent terminal/rating effects. The fixture mode does not execute edited programs or establish sandbox safety.

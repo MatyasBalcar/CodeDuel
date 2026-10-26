@@ -479,12 +479,74 @@ class PlatformIT {
   }
 
   @Test
+  void libraryReturnsFunctionArgumentsBeforeStartingAnyMatch() throws Exception {
+    int versions = count("problem_versions");
+    problemSeed.run(null);
+    assertThat(count("problem_versions")).isEqualTo(versions);
+    http.perform(get("/api/v1/problems/two-sum"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("version").value(2))
+        .andExpect(jsonPath("function.returnType").value("int[]"))
+        .andExpect(jsonPath("function.parameters[0].name").value("nums"))
+        .andExpect(jsonPath("examples[0].input.nums").isArray())
+        .andExpect(jsonPath("examples[0].input.target").isNumber())
+        .andExpect(jsonPath("examples[0].output").isArray())
+        .andExpect(jsonPath("referenceSource").doesNotExist())
+        .andExpect(jsonPath("cases").doesNotExist());
+    http.perform(get("/api/v1/problems/palindrome-check"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("examples[0].output").isBoolean());
+    assertThat(count("battles")).isZero();
+  }
+
+  @Test
+  void functionDraftsRetainTheirContractAndStructuredCases() throws Exception {
+    UUID published = dev.codeduel.problems.ProblemSeed.id("two-sum:2");
+    UUID draft = administration.cloneDraft(published, first);
+    var content = administration.detail(draft).content();
+    assertThat(content.function()).isEqualTo(catalog.find("two-sum").orElseThrow().function());
+    assertThat(json.readTree(content.tests().getFirst().input()).get("nums").isArray()).isTrue();
+    assertThat(json.readTree(content.tests().getFirst().output()).isArray()).isTrue();
+    administration.save(draft, first, content);
+    assertThat(administration.detail(draft).content()).isEqualTo(content);
+    var invalid = json.valueToTree(content);
+    ((com.fasterxml.jackson.databind.node.ObjectNode) invalid.get("tests").get(0))
+        .put("input", "{\"nums\":[1],\"target\":\"not a number\"}");
+    var invalidDraft =
+        json.treeToValue(invalid, dev.codeduel.administration.ProblemAdministration.Draft.class);
+    assertThatThrownBy(() -> administration.save(draft, first, invalidDraft))
+        .isInstanceOf(dev.codeduel.common.ApiException.class);
+    assertThatThrownBy(
+            () ->
+                jdbc.sql("UPDATE problem_versions SET function_contract=NULL WHERE id=:id")
+                    .param("id", published)
+                    .update())
+        .isInstanceOf(DataIntegrityViolationException.class);
+  }
+
+  @Test
+  void legacyVersionsKeepWorkingAlongsideFunctionVersions() {
+    var problem = catalog.find("balanced-relay", 1).orElseThrow();
+    var receipt =
+        submissions.practice(
+            dev.codeduel.problems.ProblemSeed.id("balanced-relay:1"),
+            first,
+            "JAVA_21",
+            problem.referenceSource(),
+            false);
+    drainFixtures();
+    assertThat(submissions.own(receipt.submissionId(), first).verdict())
+        .isEqualTo(Verdict.ACCEPTED);
+  }
+
+  @Test
   void practiceUsesHiddenCasesButExamplesDoNotAndNeitherChangesRatings() throws Exception {
-    var problem = catalog.all().getFirst();
+    var problem = catalog.find("balanced-relay").orElseThrow();
     UUID version =
         jdbc.sql(
-                "SELECT pv.id FROM problem_versions pv JOIN problems p ON p.id=pv.problem_id WHERE p.slug=:slug")
+                "SELECT pv.id FROM problem_versions pv JOIN problems p ON p.id=pv.problem_id WHERE p.slug=:slug AND pv.version=:version")
             .param("slug", problem.slug())
+            .param("version", problem.version())
             .query(UUID.class)
             .single();
     var run = submissions.practice(version, first, "JAVA_21", problem.referenceSource(), true);
@@ -808,12 +870,8 @@ class PlatformIT {
   }
 
   private String source(UUID battle) {
-    String slug = queries.snapshot(battle, first).problem().slug();
-    return catalog.all().stream()
-        .filter(p -> p.slug().equals(slug))
-        .findFirst()
-        .orElseThrow()
-        .referenceSource();
+    var problem = queries.snapshot(battle, first).problem();
+    return catalog.find(problem.slug(), problem.version()).orElseThrow().referenceSource();
   }
 
   private SubmissionService.Receipt submit(UUID id, UUID user) {

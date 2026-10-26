@@ -6,8 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 
 final class JudgeOutput {
-  private static final ObjectMapper JSON = new ObjectMapper()
-      .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
+  private static final ObjectMapper JSON =
+      new ObjectMapper().enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
 
   private JudgeOutput() {}
 

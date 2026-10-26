@@ -126,10 +126,12 @@ assert snapshot['problem']['versionId'] == other['problem']['versionId']
 assert snapshot['startsAt'] == other['startsAt'] and snapshot['endsAt'] == other['endsAt']
 start = datetime.datetime.fromisoformat(snapshot['startsAt'].replace('Z', '+00:00')).timestamp()
 until(lambda: time.time() >= start)
-source = next(problem['referenceSource'] for problem in json.loads((ROOT / 'CodeDuelBackend/src/main/resources/problems/catalog.json').read_text()) if problem['slug'] == snapshot['problem']['slug'])
-bad = one.write(f'/battles/{battle}/run', {'language': 'JAVA_21', 'sourceCode': 'public class Main { this does not compile }'})
+catalog = [problem for name in ('catalog', 'functions') for problem in json.loads((ROOT / f'CodeDuelBackend/src/main/resources/problems/{name}.json').read_text(encoding='utf-8'))]
+source = next(problem['referenceSource'] for problem in catalog if problem['slug'] == snapshot['problem']['slug'] and problem['version'] == snapshot['problem']['version'])
+class_name = 'Solution' if snapshot['problem'].get('function') else 'Main'
+bad = one.write(f'/battles/{battle}/run', {'language': 'JAVA_21', 'sourceCode': f'public class {class_name} {{ this does not compile }}'})
 compilation = judged(one, bad)
-assert compilation['verdict'] == 'COMPILATION_ERROR' and 'Main.java' in compilation['compilerDiagnostic']
+assert compilation['verdict'] == 'COMPILATION_ERROR' and class_name + '.java' in compilation['compilerDiagnostic']
 compose('stop', 'worker')
 try:
     early = one.write(f'/battles/{battle}/submissions', {'language': 'JAVA_21', 'sourceCode': source})
@@ -162,12 +164,13 @@ print('Passed: standalone practice and a private rematch with explicit consent.'
 operator = Client()
 operator.write('/auth/login', {'username': 'operator', 'password': (ROOT / '.secrets/deploy/bootstrap_password').read_text()})
 draft = {'slug': 'release-check-' + suffix, 'title': 'Beacon Doubler', 'difficulty': 'EASY', 'tags': ['Arithmetic'],
-    'statement': 'An observatory doubles a beacon reading. Print twice the supplied integer.',
-    'constraints': '-1000000 <= reading <= 1000000', 'inputFormat': 'One integer reading.', 'outputFormat': 'Print twice reading.',
-    'starterCode': 'public class Main { public static void main(String[] args) {} }',
-    'referenceSource': 'public class Main { public static void main(String[] args) { var in = new java.util.Scanner(System.in); System.out.println(2 * in.nextLong()); } }',
+    'statement': 'Return twice the beacon reading.',
+    'constraints': '-1000000 <= reading <= 1000000', 'inputFormat': 'reading is the beacon value.', 'outputFormat': 'Return twice reading.',
+    'function': {'returnType': 'long', 'parameters': [{'name': 'reading', 'type': 'long'}]},
+    'starterCode': 'public class Solution { public long solve(long reading) { return 0; } }',
+    'referenceSource': 'public class Solution { public long solve(long reading) { return 2 * reading; } }',
     'timeLimitMs': 2000, 'memoryLimitMb': 256, 'durationSeconds': 600,
-    'tests': [{'input': '7\n', 'output': '14\n', 'public': True}, {'input': '-999\n', 'output': '-1998\n', 'public': False}]}
+    'tests': [{'input': '{"reading":7}', 'output': '14', 'public': True}, {'input': '{"reading":-999}', 'output': '-1998', 'public': False}]}
 version = operator.write('/admin/problems', draft)['versionId']
 operator.write('/admin/problems/versions/' + version, draft, 'PUT')
 operator.expect_error(409, lambda: operator.write('/admin/problems/versions/' + version + '/publish'))

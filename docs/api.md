@@ -21,7 +21,24 @@ Usernames are 3–24 ASCII letters/digits/underscores, starting with a letter, u
 
 ## Problems
 
-`GET /problems` lists summaries. `GET /problems/{slug}` returns the latest active published version with statement, stdin/stdout contract, starter `public class Main`, limits and **public examples only**. Published version IDs are immutable. Standalone practice and administrator version publication are described below.
+`GET /problems` lists summaries. `GET /problems/{slug}` returns the latest active published version with statement, a `function` contract, starter `public class Solution`, limits and **public examples only**. This endpoint does not require a match. `inputFormat` describes the arguments; `outputFormat` describes the return value. Published version IDs are immutable.
+
+For example, Two Sum includes:
+
+```json
+{
+  "function": {
+    "returnType": "int[]",
+    "parameters": [{"name": "nums", "type": "int[]"}, {"name": "target", "type": "long"}]
+  },
+  "examples": [{"input": {"nums": [2, 7, 11, 15], "target": 9}, "output": [1, 2]}]
+}
+```
+
+Implement `public int[] solve(int[] nums, long target)` in `Solution`. Arrays, numbers,
+booleans and strings are compared as return values. Array order and string whitespace
+are significant. Older battle versions have `function: null` and retain text examples
+and their original `Main`/stdin contract.
 
 ## Queue and rooms
 
@@ -45,7 +62,7 @@ Search begins at ±150 Elo, grows by 50 every ten seconds, capped at 600, with b
 POST /battles/{id}/submissions
 {
   "language": "JAVA_21",
-  "sourceCode": "public class Main { public static void main(String[] args) {} }"
+  "sourceCode": "public class Solution { public int[] solve(int[] nums, long target) { return new int[0]; } }"
 }
 ```
 
@@ -101,3 +118,9 @@ Every unsafe call still needs CSRF. Reset/verification tokens travel in email UR
 All `/admin/**` routes require ADMIN; ordinary authenticated users receive 403. `GET/POST /admin/problems` lists versions/creates a draft. `GET/PUT /admin/problems/versions/{id}` reads private content/saves a draft. POST suffixes `/clone`, `/review`, `/publish` respectively create a new version, freeze and queue real reference judging, and publish after an accepted real-provenance pass. `POST /admin/problems/{problemId}/retire` or `/activate` changes catalogue eligibility without mutating old versions. Admin JSON writes may be up to 4 MiB; normal source writes remain 96 KiB.
 
 `GET /admin/judge-jobs` lists pending/running/dead jobs with safe metadata and server-computed lease expiry. `POST /admin/judge-jobs/{id}/release-expired-lease` releases only expired nonterminal work and appends an audit event. It cannot rewrite completed verdicts/results.
+
+Drafts carry the same optional `function` contract. The admin editor's `tests[].input`
+and `tests[].output` fields contain JSON text for named arguments and expected values;
+the server validates their types and saves them as JSONB. Keeping editor text intact
+preserves exact 64-bit integers. Public problem examples expose the parsed values.
+Arguments are limited to 2 MiB and expected results to 256 KiB per case.

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { read, write } from '../api/client'
 import { useSession } from '../api/hooks'
 import { ErrorNotice, Loading } from '../components/Feedback'
+import type { JavaFunction } from '../api/types'
 
 interface TestCase {
   input: string
@@ -24,6 +25,7 @@ interface Draft {
   memoryLimitMb: number
   durationSeconds: number
   tests: TestCase[]
+  function?: JavaFunction | null
 }
 interface Version {
   problemId: string
@@ -47,16 +49,16 @@ const empty: Draft = {
   constraints: '',
   inputFormat: '',
   outputFormat: '',
-  starterCode:
-    'public class Main { public static void main(String[] args) throws Exception {\n\n} }',
+  starterCode: 'public class Solution {\n  public int solve(int[] nums) {\n    return 0;\n  }\n}\n',
   referenceSource: '',
   timeLimitMs: 2000,
   memoryLimitMb: 256,
   durationSeconds: 900,
   tests: [
-    { input: '', output: '', public: true },
-    { input: '', output: '', public: false },
+    { input: '{"nums":[1,2,3]}', output: '0', public: true },
+    { input: '{"nums":[]}', output: '0', public: false },
   ],
+  function: { returnType: 'int', parameters: [{ name: 'nums', type: 'int[]' }] },
 }
 
 export function AdminPage() {
@@ -214,7 +216,7 @@ export function AdminPage() {
               />
             </>
           ) : (
-            <p>Select a version or create an original challenge.</p>
+            <p>Select a version or create a challenge.</p>
           )}
         </section>
       </div>
@@ -235,13 +237,28 @@ function DraftEditor({
   onSave: (value: Draft) => void
 }) {
   const [draft, setDraft] = useState(initial)
+  const [error, setError] = useState<Error | null>(null)
+  const types = [
+    'int',
+    'long',
+    'double',
+    'boolean',
+    'String',
+    'int[]',
+    'long[]',
+    'double[]',
+    'boolean[]',
+    'String[]',
+    'int[][]',
+    'long[][]',
+  ]
   const textFields = [
     ['slug', 'URL slug'],
     ['title', 'Title'],
     ['statement', 'Statement'],
     ['constraints', 'Constraints'],
-    ['inputFormat', 'Input format'],
-    ['outputFormat', 'Output format'],
+    ['inputFormat', draft.function ? 'Arguments' : 'Input format'],
+    ['outputFormat', draft.function ? 'Return value' : 'Output format'],
     ['starterCode', 'Java starter'],
     ['referenceSource', 'Private reference solution'],
   ] as const
@@ -250,10 +267,138 @@ function DraftEditor({
       className="admin-form"
       onSubmit={(event) => {
         event.preventDefault()
-        onSave(draft)
+        try {
+          if (draft.function)
+            for (const test of draft.tests) {
+              JSON.parse(test.input)
+              JSON.parse(test.output)
+            }
+          setError(null)
+          onSave(draft)
+        } catch {
+          setError(
+            new Error('Use valid JSON for every set of arguments and expected return value.'),
+          )
+        }
       }}
     >
+      <ErrorNotice error={error} />
       <fieldset disabled={frozen || pending}>
+        <label>
+          Solution format
+          <select
+            value={draft.function ? 'function' : 'stdio'}
+            onChange={(event) =>
+              setDraft({
+                ...draft,
+                function: event.target.value === 'function' ? empty.function : null,
+              })
+            }
+          >
+            <option value="function">Function arguments and return value</option>
+            <option value="stdio">Legacy standard input / output</option>
+          </select>
+        </label>
+        {draft.function && (
+          <>
+            <label>
+              Return type
+              <select
+                value={draft.function.returnType}
+                onChange={(event) =>
+                  setDraft({
+                    ...draft,
+                    function: { ...draft.function!, returnType: event.target.value },
+                  })
+                }
+              >
+                {types.map((type) => (
+                  <option key={type}>{type}</option>
+                ))}
+              </select>
+            </label>
+            <h3>Function parameters</h3>
+            {draft.function.parameters.map((parameter, index) => (
+              <div key={index}>
+                <label>
+                  Parameter name
+                  <input
+                    required
+                    pattern="[a-zA-Z][a-zA-Z0-9_]{0,39}"
+                    value={parameter.name}
+                    onChange={(event) =>
+                      setDraft({
+                        ...draft,
+                        function: {
+                          ...draft.function!,
+                          parameters: draft.function!.parameters.map((value, i) =>
+                            i === index ? { ...value, name: event.target.value } : value,
+                          ),
+                        },
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  Parameter type
+                  <select
+                    value={parameter.type}
+                    onChange={(event) =>
+                      setDraft({
+                        ...draft,
+                        function: {
+                          ...draft.function!,
+                          parameters: draft.function!.parameters.map((value, i) =>
+                            i === index ? { ...value, type: event.target.value } : value,
+                          ),
+                        },
+                      })
+                    }
+                  >
+                    {types.map((type) => (
+                      <option key={type}>{type}</option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  className="text-link danger"
+                  onClick={() =>
+                    setDraft({
+                      ...draft,
+                      function: {
+                        ...draft.function!,
+                        parameters: draft.function!.parameters.filter((_, i) => i !== index),
+                      },
+                    })
+                  }
+                >
+                  Remove parameter
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              className="button secondary small"
+              disabled={draft.function.parameters.length >= 8}
+              onClick={() =>
+                setDraft({
+                  ...draft,
+                  function: {
+                    ...draft.function!,
+                    parameters: [...draft.function!.parameters, { name: '', type: 'int' }],
+                  },
+                })
+              }
+            >
+              Add parameter
+            </button>
+            <p className="muted">
+              Use a public solve method in class Solution with these parameters and return type.
+              Cases contain named arguments as JSON and an expected return value.
+            </p>
+          </>
+        )}
         {textFields.map(([field, label]) => (
           <label key={field}>
             {label}
@@ -328,7 +473,13 @@ function DraftEditor({
             </label>
             {(['input', 'output'] as const).map((field) => (
               <label key={field}>
-                {field === 'input' ? 'Input' : 'Expected output'}
+                {field === 'input'
+                  ? draft.function
+                    ? 'Arguments (JSON object)'
+                    : 'Input'
+                  : draft.function
+                    ? 'Expected return value (JSON)'
+                    : 'Expected output'}
                 <textarea
                   rows={3}
                   value={item[field]}
@@ -361,7 +512,14 @@ function DraftEditor({
           onClick={() =>
             setDraft({
               ...draft,
-              tests: [...draft.tests, { input: '', output: '', public: false }],
+              tests: [
+                ...draft.tests,
+                {
+                  input: draft.function ? '{}' : '',
+                  output: draft.function ? '0' : '',
+                  public: false,
+                },
+              ],
             })
           }
         >

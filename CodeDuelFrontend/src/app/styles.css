@@ -1749,15 +1749,15 @@ code {
   flex: 1;
   min-width: 160px;
 }
-.example-tabs-content p {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 10px;
+.example-tabs-content > div > span {
+  display: block;
+  margin: 10px 0 7px;
   font-size: 11px;
   color: var(--muted);
 }
-.example-tabs-content code {
+.example-tabs-content pre {
+  margin: 0;
+  line-height: 1.6;
   font-size: 11px;
   color: var(--muted);
   white-space: pre-wrap;

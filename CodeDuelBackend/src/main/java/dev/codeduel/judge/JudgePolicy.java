@@ -26,7 +26,18 @@ public class JudgePolicy {
           ProblemCatalog.WRONG_SOURCE.equals(source)
               || catalog
                   .find(slug, version)
-                  .map(problem -> problem.referenceSource().equals(source) || ProblemCatalog.wrongSource(problem).equals(source))
+                  .or(
+                      () ->
+                          catalog.all().stream()
+                              .filter(
+                                  problem ->
+                                      problem.slug().equals(slug)
+                                          && problem.referenceSource().equals(source))
+                              .findFirst())
+                  .map(
+                      problem ->
+                          problem.referenceSource().equals(source)
+                              || ProblemCatalog.wrongSource(problem).equals(source))
                   .orElse(false);
       if (!known)
         throw new ApiException(

@@ -6,9 +6,14 @@ limit. The first correct submission wins, based on when the server receives it.
 You can play ranked matches, invite a friend to a private room, or practice on your own.
 Ranked games affect your Elo rating. Private games and practice do not.
 
-![CodeDuel lobby in black and white](docs/images/lobby.png)
+There are 100 problems, from basic arrays and strings to graphs and dynamic programming.
+Each one gives you a Java `solve(...)` method with named arguments. Return your answer;
+the judge handles calling the method. You can read the signature and examples in the
+library before starting a game.
 
-_Lobby preview with demo data._
+![Function arguments and examples in the CodeDuel library](docs/images/problems.png)
+
+_A problem from the library, with its Java signature and examples._
 
 ## Run on Windows
 
@@ -58,7 +63,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows.ps1 stop
 | ------------------ | ------------------------------------------------------------ |
 | `CodeDuelBackend`  | Java 21, Spring Boot, PostgreSQL, and the Maven wrapper      |
 | `CodeDuelFrontend` | React, TypeScript, Vite, and the Monaco code editor          |
-| `problems`         | 45 challenges, reference solutions, and test generators      |
+| `problems`         | 100 challenges, reference solutions, and test generators     |
 | `worker`           | Setup for the separate Linux execution environment           |
 | `deploy`           | Deployment configuration, monitoring, and database utilities |
 | `docs`             | Setup instructions and details about the application         |
@@ -82,6 +87,16 @@ Use either the Docker stack or the Windows scripts at a time, since they use the
 The [local run guide](docs/local-run-guide.md) also covers macOS and the real judge.
 
 ## Checks
+
+To run the GitHub Actions checks locally on this Windows/WSL setup:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\check.ps1 -Wsl -Browser
+```
+
+Leave off `-Browser` for the backend, problem references, and frontend checks. Add `-Fix`
+to apply formatting before checking. See [testing locally](docs/testing.md) for individual
+checks, reports, and what to do when a check fails.
 
 From `CodeDuelFrontend`:
 

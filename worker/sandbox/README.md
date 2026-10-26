@@ -21,7 +21,19 @@ python3 worker/sandbox/verify-local.py
 
 `--sandbox-only` runs the real execution tests without the PostgreSQL suite. Ordinary `./mvnw verify` deliberately skips the real-executor tests unless `CODEDUEL_EXECUTOR_URL` and `CODEDUEL_EXECUTOR_TOKEN` are provided. It still requires Docker for the normal PostgreSQL tests. Fixture tests are separate and never establish real execution security.
 
-The public contract is a default-package `public class Main`, standard input and standard output, Java 21. Compiler flags, commands, environment, mounts and limits are controlled exclusively by the worker. Annotation processing is disabled. Compilation has 10 CPU / 15 wall seconds and 512 MiB; each run has its problem CPU/memory limit, a separate wall limit, 48 process/thread slots, 16 KiB output collectors and bounded writable filesystems. Accepted output is compared as case-sensitive tokens. JVM heap is limited within the process memory budget. Never rank by measured runtime across execution machines.
+The current public contract is Java 21 `public class Solution` with the declared
+`solve(...)` method. A server-owned `Main.java` driver decodes typed arguments, calls
+the method, ignores debug prints, and encodes its return value. Both files compile
+inside the execution VM. User source is kept in a separate file without rewriting
+imports or classes. Arrays and strings are compared as structured values. Old versions
+retain their `Main`/stdin contract and case-sensitive token comparison.
+
+Compiler flags, commands, environment, mounts and limits are controlled exclusively by
+the worker. Annotation processing is disabled. Compilation has 10 CPU / 15 wall seconds
+and 512 MiB; each run has its problem CPU/memory limit, a separate wall limit, 48
+process/thread slots, a 256 KiB result collector, a 16 KiB stderr collector and bounded
+writable filesystems. Persisted public feedback stays limited to 8 KiB. JVM heap is
+limited within the process memory budget. Never rank by measured runtime across machines.
 
 Compiled JAR checkpoints are reusable across the submission's cases and survive worker restarts. Results are fenced by a PostgreSQL lease. Unavailable/expired artifacts cause a fresh compilation on retry. Worker cleanup plus a five-minute artifact TTL bounds abandoned cached source artifacts. User source is never passed to a host shell or executed by the API. Only server-owned, constant compile commands cross the internal executor boundary.
 

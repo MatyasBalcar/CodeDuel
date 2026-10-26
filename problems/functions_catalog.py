@@ -218,11 +218,30 @@ def build_functions(legacy):
                                    parameters=[dict(name=name, type=kind) for name, kind in parameters])
         content['starterCode'] = starter(result_type, parameters)
         content['referenceSource'] = (ROOT / slug / 'Solution.java').read_text(encoding='utf-8')
+        content['statement'] = content['statement'].replace('Print the resulting array', 'Return the resulting array').replace('and print them', 'and return them')
+        if slug == 'length-of-last-word':
+            content['statement'] = 'Find the number of letters in the last word of text. Words are separated by spaces, and extra spaces may appear at either end. Return 0 if there is no word.'
         content['inputFormat'] = 'Arguments: ' + ', '.join(f'{name} ({kind})' for name, kind in parameters) + '.'
         if layout in ('array', 'array-target'):
             content['inputFormat'] += f' n is {parameters[0][0]}.length.'
         if layout == 'two-arrays':
             content['inputFormat'] += ' n and m are the lengths of the first and second arrays.'
+        details = {
+            'coverage-line': 'Each interval is [start, end]; touching intervals may be merged.',
+            'dock-slots': 'Each reservation is [arrival, departure]. A departing ship frees its slot at that time.',
+            'compass-picks': 'Each point is [x, y]. Return the 1-based positions of the k selected points.',
+            'range-sum-query': 'Each query is [left, right], using inclusive 1-based positions in nums.',
+            'shortest-path': 'n is the vertex count. Each directed edge is [from, to, weight]. Vertices, source, and target are numbered from 1.',
+            'course-schedule': 'n is the course count. Each prerequisite is [before, after], with courses numbered from 1.',
+            'minimum-spanning-tree': 'n is the vertex count. Each undirected edge is [from, to, weight], with vertices numbered from 1.',
+            'non-overlapping-intervals': 'Each interval is [start, end]. Intervals that only touch do not overlap.',
+            'zero-one-knapsack': 'weights[i] and values[i] describe the same item. Both arrays have n items.',
+            'step-bridges': 'n is the destination step. broken lists the step numbers that cannot be used.',
+            'archive-lookup': 'keys is sorted. Return the first 1-based position of each query, or -1 if absent.',
+            'word-break': 'words is the dictionary; a dictionary word may be used more than once.',
+        }
+        if slug in details:
+            content['inputFormat'] += ' ' + details[slug]
         content['outputFormat'] = original['outputFormat'].replace('Print', 'Return').replace('print', 'return')
         if result_type == 'boolean':
             content['outputFormat'] = content['outputFormat'].replace('YES', 'true').replace('NO', 'false')

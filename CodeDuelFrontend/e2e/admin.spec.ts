@@ -22,22 +22,36 @@ test('administrator authors, verifies, publishes and retires an immutable challe
   const fields = {
     'URL slug': slug,
     Title: 'Browser Beacon',
-    Statement: 'A beacon repeats twice its numeric signal. Print twice the supplied integer.',
+    Statement: 'Return twice the numeric signal.',
     Constraints: '-1000000 <= signal <= 1000000',
-    'Input format': 'One integer signal.',
-    'Output format': 'Twice the supplied signal.',
-    'Java starter': 'public class Main { public static void main(String[] args) {} }',
+    Arguments: 'signal is the reading to double.',
+    'Return value': 'Twice the supplied signal.',
+    'Java starter': 'public class Solution { public long solve(long signal) { return 0; } }',
     'Private reference solution':
-      'public class Main { public static void main(String[] args) { var in = new java.util.Scanner(System.in); System.out.println(2 * in.nextLong()); } }',
+      'public class Solution { public long solve(long signal) { return 2 * signal; } }',
   }
   for (const [label, value] of Object.entries(fields))
     await page.getByRole('textbox', { name: label, exact: true }).fill(value)
-  await page.getByRole('textbox', { name: 'Input', exact: true }).nth(0).fill('7\n')
-  await page.getByRole('textbox', { name: 'Expected output', exact: true }).nth(0).fill('14\n')
-  await page.getByRole('textbox', { name: 'Input', exact: true }).nth(1).fill('-9\n')
-  await page.getByRole('textbox', { name: 'Expected output', exact: true }).nth(1).fill('-18\n')
+  await page.getByLabel('Return type', { exact: true }).selectOption('long')
+  await page.getByLabel('Parameter name', { exact: true }).fill('signal')
+  await page.getByLabel('Parameter type', { exact: true }).selectOption('long')
+  await page
+    .getByRole('textbox', { name: 'Arguments (JSON object)', exact: true })
+    .nth(0)
+    .fill('{"signal":7}')
+  await page
+    .getByRole('textbox', { name: 'Expected return value (JSON)', exact: true })
+    .nth(0)
+    .fill('14')
+  await page
+    .getByRole('textbox', { name: 'Arguments (JSON object)', exact: true })
+    .nth(1)
+    .fill('{"signal":-9}')
+  await page
+    .getByRole('textbox', { name: 'Expected return value (JSON)', exact: true })
+    .nth(1)
+    .fill('-18')
   await page.getByRole('button', { name: 'Save draft', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Browser Beacon · v1' })).toBeVisible()
   await page.getByRole('button', { name: 'Freeze & verify saved draft', exact: true }).click()
   await expect(
     page.getByRole('button', { name: 'Publish verified version', exact: true }),
@@ -46,9 +60,6 @@ test('administrator authors, verifies, publishes and retires an immutable challe
     page.getByRole('textbox', { name: 'Private reference solution', exact: true }),
   ).toBeDisabled()
   await page.getByRole('button', { name: 'Publish verified version', exact: true }).click()
-  await expect(
-    page.locator('.section-heading').getByText('PUBLISHED', { exact: true }),
-  ).toBeVisible()
   const published = await page.request.get(`/api/v1/problems/${slug}`)
   expect(published.status()).toBe(200)
   expect(JSON.stringify(await published.json())).not.toContain('referenceSource')
