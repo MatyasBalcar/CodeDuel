@@ -5,6 +5,8 @@ import dev.codeduel.battles.FinalizeBattleService;
 import dev.codeduel.common.Sql;
 import dev.codeduel.events.BattleEvents;
 import dev.codeduel.submissions.Verdict;
+import dev.codeduel.problems.JavaFunction;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -20,13 +22,15 @@ public class JudgeJobStore {
   private final BattleStore battles;
   private final BattleEvents events;
   private final FinalizeBattleService finalizer;
+  private final ObjectMapper json;
 
   public JudgeJobStore(
-      JdbcClient jdbc, BattleStore battles, BattleEvents events, FinalizeBattleService finalizer) {
+      JdbcClient jdbc, BattleStore battles, BattleEvents events, FinalizeBattleService finalizer, ObjectMapper json) {
     this.jdbc = jdbc;
     this.battles = battles;
     this.events = events;
     this.finalizer = finalizer;
+    this.json = json;
   }
 
   /** Claim and commit before any network call. Expired leases are reclaimable after a crash. */
@@ -58,7 +62,7 @@ public class JudgeJobStore {
         claim ->
             jdbc.sql(
                     """
-        SELECT s.battle_id, s.source_code, s.is_official, pv.time_limit_ms, pv.memory_limit_mb, j.executor_program
+        SELECT s.battle_id, s.source_code, s.is_official, pv.time_limit_ms, pv.memory_limit_mb, pv.function_contract, j.executor_program
         FROM submissions s JOIN problem_versions pv ON pv.id = s.problem_version_id
         JOIN judge_jobs j ON j.submission_id = s.id WHERE s.id = :id
         """)
@@ -75,14 +79,17 @@ public class JudgeJobStore {
                             rs.getInt("time_limit_ms"),
                             rs.getInt("memory_limit_mb"),
                             rs.getString("executor_program"),
-                            claim.createdAt()))
+                            claim.createdAt(),
+                            JavaFunction.read(rs.getString("function_contract"), json)))
                 .single());
   }
 
   public List<Case> remaining(Job job) {
     return jdbc.sql(
             """
-        SELECT r.test_case_id, COALESCE(r.executor_token, j.executor_program) AS executor_token, t.input_data, t.expected_output
+        SELECT r.test_case_id, COALESCE(r.executor_token, j.executor_program) AS executor_token,
+          COALESCE(t.arguments::text,t.input_data) AS input_data,
+          COALESCE(t.expected_value::text,t.expected_output) AS expected_output
         FROM submission_case_results r JOIN test_cases t ON t.id = r.test_case_id
         JOIN judge_jobs j ON j.submission_id = r.submission_id
         WHERE r.submission_id = :id AND r.verdict IS NULL ORDER BY t.ordinal LIMIT 1
@@ -289,7 +296,8 @@ public class JudgeJobStore {
       int timeLimitMs,
       int memoryLimitMb,
       String programToken,
-      Instant createdAt) {}
+      Instant createdAt,
+      JavaFunction function) {}
 
   public record Case(UUID id, String executorToken, String input, String expected) {}
 }

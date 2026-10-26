@@ -54,12 +54,11 @@ public class DemoConfiguration {
     Map<String, String> practice(@PathVariable String slug) {
       if (judge.mode() != dev.codeduel.judge.JudgeSettings.Mode.FIXTURE)
         throw ApiException.notFound();
-      String source =
+      var problem =
           catalog
               .find(slug)
-              .map(ProblemCatalog.Content::referenceSource)
               .orElseThrow(ApiException::notFound);
-      return Map.of("acceptedSource", source, "wrongSource", ProblemCatalog.WRONG_SOURCE);
+      return Map.of("acceptedSource", problem.referenceSource(), "wrongSource", ProblemCatalog.wrongSource(problem));
     }
 
     @GetMapping("/api/v1/demo/battles/{id}/fixtures")
@@ -71,12 +70,11 @@ public class DemoConfiguration {
       if (snapshot.problem() == null)
         throw ApiException.conflict(
             "NOT_STARTED", "Sample programs are available after the shared start.");
-      String source =
+      var problem =
           catalog
-              .find(snapshot.problem().slug())
-              .map(ProblemCatalog.Content::referenceSource)
+              .find(snapshot.problem().slug(), snapshot.problem().version())
               .orElseThrow();
-      return Map.of("acceptedSource", source, "wrongSource", ProblemCatalog.WRONG_SOURCE);
+      return Map.of("acceptedSource", problem.referenceSource(), "wrongSource", ProblemCatalog.wrongSource(problem));
     }
   }
 }

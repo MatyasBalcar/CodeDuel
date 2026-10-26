@@ -1,0 +1,69 @@
+import java.io.*;
+import java.util.*;
+
+public class Main {
+  public static void main(String[] args) throws Exception {
+    Input input = new Input();
+    int count = input.integer();
+    int[] values = new int[count];
+    for (int index = 0; index < count; index++) values[index] = input.integer();
+    int pivot = count - 2;
+    while (pivot >= 0 && values[pivot] >= values[pivot + 1]) pivot--;
+    if (pivot >= 0) {
+      int next = count - 1;
+      while (values[next] <= values[pivot]) next--;
+      swap(values, pivot, next);
+    }
+    int left = pivot + 1;
+    int right = count - 1;
+    while (left < right) swap(values, left++, right--);
+    StringBuilder output = new StringBuilder();
+    for (int index = 0; index < count; index++) {
+      if (index > 0) output.append(' ');
+      output.append(values[index]);
+    }
+    System.out.println(output);
+  }
+
+  private static void swap(int[] values, int first, int second) {
+    int value = values[first];
+    values[first] = values[second];
+    values[second] = value;
+  }
+
+  private static final class Input {
+    private final byte[] buffer = new byte[65536];
+    private int offset;
+    private int size;
+
+    private int read() throws IOException {
+      if (offset >= size) {
+        size = System.in.read(buffer);
+        offset = 0;
+        if (size < 0) return -1;
+      }
+      return buffer[offset++];
+    }
+
+    String next() throws IOException {
+      StringBuilder value = new StringBuilder();
+      int c;
+      do {
+        c = read();
+      } while (c >= 0 && c <= 32);
+      while (c > 32) {
+        value.append((char) c);
+        c = read();
+      }
+      return value.toString();
+    }
+
+    int integer() throws IOException {
+      return Integer.parseInt(next());
+    }
+
+    long number() throws IOException {
+      return Long.parseLong(next());
+    }
+  }
+}

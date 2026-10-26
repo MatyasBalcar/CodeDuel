@@ -15,7 +15,7 @@ public class JudgePolicy {
     this.catalog = catalog;
   }
 
-  public void check(String source, String slug) {
+  public void check(String source, String slug, int version) {
     if (settings.mode() == JudgeSettings.Mode.DISABLED)
       throw new ApiException(
           HttpStatus.SERVICE_UNAVAILABLE,
@@ -25,8 +25,8 @@ public class JudgePolicy {
       boolean known =
           ProblemCatalog.WRONG_SOURCE.equals(source)
               || catalog
-                  .find(slug)
-                  .map(problem -> problem.referenceSource().equals(source))
+                  .find(slug, version)
+                  .map(problem -> problem.referenceSource().equals(source) || ProblemCatalog.wrongSource(problem).equals(source))
                   .orElse(false);
       if (!known)
         throw new ApiException(

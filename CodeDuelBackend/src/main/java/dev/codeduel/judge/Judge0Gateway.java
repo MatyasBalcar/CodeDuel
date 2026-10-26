@@ -19,7 +19,7 @@ import java.util.concurrent.TimeoutException;
 
 /** Narrow Judge0 client: no caller-controlled commands, callbacks, compiler flags or limits. */
 public final class Judge0Gateway implements JudgeGateway {
-  private static final int MAX_RESPONSE_BYTES = 131072;
+  private static final int MAX_RESPONSE_BYTES = 1048576;
   private final JudgeSettings settings;
   private final ObjectMapper json;
   private final HttpClient http;
@@ -63,7 +63,7 @@ public final class Judge0Gateway implements JudgeGateway {
   @Override
   public Step evaluate(Request request, String expectedOutput, String token) {
     if (token == null) return new Step(start(request), Result.pending());
-    return new Step(token, poll(token, expectedOutput));
+    return new Step(token, poll(token, expectedOutput, request.function() != null));
   }
 
   public String start(Request request) {
@@ -75,12 +75,13 @@ public final class Judge0Gateway implements JudgeGateway {
     }
     var body = new LinkedHashMap<String, Object>();
     body.put("language_id", settings.javaLanguageId());
-    body.put("source_code", encode(request.source()));
+    body.put("source_code", encode(request.function() == null ? request.source() : FunctionProgram.runner(request.function())));
+    if (request.function() != null) body.put("additional_files", FunctionProgram.additionalFiles(request.source()));
     body.put("stdin", encode(request.input()));
     body.put("cpu_time_limit", request.timeLimitMs() / 1000.0);
     body.put("wall_time_limit", Math.min(20, request.timeLimitMs() / 1000.0 + 5));
     body.put("memory_limit", request.memoryLimitMb() * 1024);
-    body.put("max_file_size", 64);
+    body.put("max_file_size", 256);
     body.put("max_processes_and_or_threads", 64);
     body.put("enable_network", false);
     body.put("redirect_stderr_to_stdout", false);
@@ -97,6 +98,10 @@ public final class Judge0Gateway implements JudgeGateway {
   }
 
   public Result poll(String token, String expectedOutput) {
+    return poll(token, expectedOutput, false);
+  }
+
+  private Result poll(String token, String expectedOutput, boolean function) {
     try {
       UUID.fromString(token);
     } catch (IllegalArgumentException ex) {
@@ -114,8 +119,7 @@ public final class Judge0Gateway implements JudgeGateway {
     Verdict verdict =
         switch (status) {
           case 3 ->
-              canonical(decode(response.path("stdout").asText("")))
-                      .equals(canonical(expectedOutput))
+              JudgeOutput.matches(decode(response.path("stdout").asText("")), expectedOutput, function)
                   ? Verdict.ACCEPTED
                   : Verdict.WRONG_ANSWER;
           case 4 -> Verdict.WRONG_ANSWER;
@@ -149,7 +153,7 @@ public final class Judge0Gateway implements JudgeGateway {
   private static String decode(String value) {
     try {
       byte[] decoded = Base64.getDecoder().decode(value);
-      if (decoded.length > 65536) throw new JudgeUnavailableException();
+      if (decoded.length > 262144) throw new JudgeUnavailableException();
       return new String(decoded, StandardCharsets.UTF_8);
     } catch (IllegalArgumentException ex) {
       throw new JudgeUnavailableException();

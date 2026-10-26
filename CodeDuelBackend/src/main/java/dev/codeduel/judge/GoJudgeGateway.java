@@ -100,7 +100,10 @@ public final class GoJudgeGateway implements JudgeGateway {
     if (token == null) {
       var command = command(List.of("/bin/sh", "-c", COMPILE), "", 10000, 512);
       command.put("clockLimit", 15_000_000_000L);
-      command.put("copyIn", Map.of("Main.java", Map.of("content", request.source())));
+      command.put("copyIn", request.function() == null
+          ? Map.of("Main.java", Map.of("content", request.source()))
+          : Map.of("Main.java", Map.of("content", FunctionProgram.runner(request.function())),
+              "Solution.java", Map.of("content", request.source())));
       command.put("copyOutCached", List.of("program.jar"));
       command.put("copyOutMax", 4 * 1024 * 1024);
       var result = run(command);
@@ -147,7 +150,7 @@ public final class GoJudgeGateway implements JudgeGateway {
     Verdict verdict =
         switch (response.path("status").asText()) {
           case "Accepted" ->
-              Judge0Gateway.canonical(stdout).equals(Judge0Gateway.canonical(expected))
+              JudgeOutput.matches(stdout, expected, request.function() != null)
                   ? Verdict.ACCEPTED
                   : Verdict.WRONG_ANSWER;
           case "Time Limit Exceeded" -> Verdict.TIME_LIMIT_EXCEEDED;
@@ -181,7 +184,7 @@ public final class GoJudgeGateway implements JudgeGateway {
         "files",
         List.of(
             Map.of("content", input),
-            Map.of("name", "stdout", "max", 16384),
+            Map.of("name", "stdout", "max", 262144),
             Map.of("name", "stderr", "max", 16384)));
     cmd.put("cpuLimit", timeMs * 1_000_000L);
     cmd.put("clockLimit", (timeMs + 3000) * 1_000_000L);
@@ -215,7 +218,7 @@ public final class GoJudgeGateway implements JudgeGateway {
         builder
             .header("Content-Type", "application/json")
             .method(method, HttpRequest.BodyPublishers.ofByteArray(json.writeValueAsBytes(body)));
-      var future = http.sendAsync(builder.build(), info -> new LimitedBodySubscriber(262144));
+      var future = http.sendAsync(builder.build(), info -> new LimitedBodySubscriber(2097152));
       HttpResponse<byte[]> response;
       try {
         response = future.get(21, TimeUnit.SECONDS);

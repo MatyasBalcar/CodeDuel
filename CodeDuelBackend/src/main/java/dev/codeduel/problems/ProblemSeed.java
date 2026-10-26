@@ -32,6 +32,12 @@ public class ProblemSeed implements ApplicationRunner {
   public void run(ApplicationArguments args) throws Exception {
     jdbc.sql("SELECT pg_advisory_xact_lock(772406002)").query().singleRow();
     for (var content : catalog.all()) {
+      if (content.function() != null) {
+        for (var test : content.cases()) {
+          content.function().validateArguments(test.arguments());
+          content.function().validateExpected(test.expected());
+        }
+      }
       String checksum =
           HexFormat.of()
               .formatHex(
@@ -62,8 +68,8 @@ public class ProblemSeed implements ApplicationRunner {
       jdbc.sql(
               """
           INSERT INTO problem_versions(id, problem_id, version, status, statement, constraints_text,
-              input_format, output_format, starter_code, content_sha256, time_limit_ms, memory_limit_mb, duration_seconds, reference_source)
-          VALUES (:id, :problem, :version, 'DRAFT', :statement, :constraints, :input, :output, :starter, :checksum, :time, :memory, :duration, :reference)
+              input_format, output_format, starter_code, content_sha256, time_limit_ms, memory_limit_mb, duration_seconds, reference_source, function_contract)
+          VALUES (:id, :problem, :version, 'DRAFT', :statement, :constraints, :input, :output, :starter, :checksum, :time, :memory, :duration, :reference, CAST(:function AS jsonb))
           """)
           .param("id", versionId)
           .param("problem", problemId)
@@ -77,16 +83,19 @@ public class ProblemSeed implements ApplicationRunner {
           .param("time", content.timeLimitMs())
           .param("memory", content.memoryLimitMb())
           .param("reference", content.referenceSource())
+          .param("function", content.function() == null ? null : json.writeValueAsString(content.function()))
           .param("duration", content.durationSeconds())
           .update();
       for (int ordinal = 0; ordinal < content.cases().size(); ordinal++) {
         var test = content.cases().get(ordinal);
         jdbc.sql(
-                "INSERT INTO test_cases(id, problem_version_id, input_data, expected_output, is_public, ordinal) VALUES (:id, :version, :input, :output, :public, :ordinal)")
+                "INSERT INTO test_cases(id, problem_version_id, input_data, expected_output, is_public, ordinal, arguments, expected_value) VALUES (:id, :version, :input, :output, :public, :ordinal, CAST(:arguments AS jsonb), CAST(:expected AS jsonb))")
             .param("id", id(versionId + ":" + ordinal))
             .param("version", versionId)
-            .param("input", test.input())
-            .param("output", test.output())
+            .param("input", test.arguments() == null ? test.input() : "")
+            .param("output", test.expected() == null ? test.output() : "")
+            .param("arguments", test.arguments() == null ? null : test.arguments().toString())
+            .param("expected", test.expected() == null ? null : test.expected().toString())
             .param("public", test.isPublic())
             .param("ordinal", ordinal)
             .update();

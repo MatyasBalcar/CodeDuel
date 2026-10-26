@@ -58,7 +58,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows.ps1 stop
 | ------------------ | ------------------------------------------------------------ |
 | `CodeDuelBackend`  | Java 21, Spring Boot, PostgreSQL, and the Maven wrapper      |
 | `CodeDuelFrontend` | React, TypeScript, Vite, and the Monaco code editor          |
-| `problems`         | Fifteen challenges, reference solutions, and test generators |
+| `problems`         | 45 challenges, reference solutions, and test generators      |
 | `worker`           | Setup for the separate Linux execution environment           |
 | `deploy`           | Deployment configuration, monitoring, and database utilities |
 | `docs`             | Setup instructions and details about the application         |

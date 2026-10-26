@@ -27,7 +27,7 @@ jobs:
           cache-dependency-path: CodeDuelFrontend/package-lock.json
       - name: Backend format, unit and PostgreSQL concurrency tests
         run: ./mvnw -B -ntp verify
-      - name: Verify original problem oracles
+      - name: Verify problem reference solutions
         run: python3 problems/verify_catalog.py
       - name: Frontend dependencies
         working-directory: CodeDuelFrontend

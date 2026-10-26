@@ -1,6 +1,6 @@
 # CodeDuel — local run guide
 
-Run shared commands from the project root, which contains both the backend and frontend folders. The supported submission language is **Java 21**, with a default-package `public class Main` reading stdin and writing stdout. The library contains fifteen original problems.
+Run shared commands from the project root, which contains both the backend and frontend folders. The supported submission language is **Java 21**, with a default-package `public class Main` reading stdin and writing stdout. The library contains 45 problems: 16 easy, 22 medium, and 7 hard, including familiar interview and contest exercises.
 
 ## Windows without Docker
 

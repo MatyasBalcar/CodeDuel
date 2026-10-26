@@ -5,15 +5,16 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-catalog = json.loads((ROOT.parent / "CodeDuelBackend/src/main/resources/problems/catalog.json").read_text())
+catalog = json.loads((ROOT.parent / "CodeDuelBackend/src/main/resources/problems/catalog.json").read_text(encoding="utf-8"))
 total = 0
 for problem in catalog:
     reference = ROOT / problem['slug'] / "Main.java"
-    assert problem['referenceSource'] == reference.read_text(), "Regenerate catalog after reference edits"
+    assert problem['referenceSource'] == reference.read_text(encoding="utf-8"), "Regenerate catalog after reference edits"
     with tempfile.TemporaryDirectory(prefix="codeduel-reference-") as directory:
         subprocess.run(["javac", "--release", "21", "-d", directory, str(reference)], check=True)
-        for case in problem['cases']:
+        for index, case in enumerate(problem['cases'], start=1):
             result = subprocess.run(["java", "-cp", directory, "Main"], input=case['input'], capture_output=True, text=True, timeout=5, check=True)
-            assert result.stdout.split() == case['output'].split(), f"{problem['slug']}: reference mismatch"
+            assert result.stdout.split() == case['output'].split(), f"{problem['slug']}: case {index} reference mismatch"
             total += 1
+    print(f"Verified {problem['slug']} ({len(problem['cases'])} cases).", flush=True)
 print(f"Verified {total} cases against trusted Java reference programs.")

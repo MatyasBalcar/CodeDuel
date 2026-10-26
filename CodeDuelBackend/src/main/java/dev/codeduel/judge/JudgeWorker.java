@@ -36,7 +36,7 @@ public class JudgeWorker {
         var step =
             gateway.evaluate(
                 new JudgeGateway.Request(
-                    job.source(), test.input(), job.timeLimitMs(), job.memoryLimitMb()),
+                    job.source(), test.input(), job.timeLimitMs(), job.memoryLimitMb(), job.function()),
                 test.expected(),
                 test.executorToken());
         if (test.executorToken() == null && step.executorToken() != null) {

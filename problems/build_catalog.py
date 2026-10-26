@@ -1,4 +1,4 @@
-"""Build original v1 content deterministically. Never pass user programs to this script."""
+"""Build versioned seed content deterministically. Never pass user programs to this script."""
 import json
 import random
 from pathlib import Path
@@ -49,7 +49,7 @@ def problem(slug, title, difficulty, tags, statement, constraints, input_format,
     return dict(slug=slug, title=title, difficulty=difficulty, tags=tags, version=1,
                 statement=statement, constraints=constraints, inputFormat=input_format,
                 outputFormat=output_format, starterCode=STARTER,
-                referenceSource=(ROOT / slug / "Main.java").read_text(),
+                referenceSource=(ROOT / slug / "Main.java").read_text(encoding="utf-8"),
                 timeLimitMs=2000, memoryLimitMb=256, durationSeconds=900, cases=cases)
 
 
@@ -87,9 +87,13 @@ catalog = [
 ]
 
 from extended_catalog import build_extra
+from common_catalog import build_common
+from classic_catalog import build_classics
 
 catalog.extend(build_extra(problem, case))
+catalog.extend(build_common(problem, case))
+catalog.extend(build_classics(problem, case))
 
 DESTINATION.parent.mkdir(parents=True, exist_ok=True)
-DESTINATION.write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + "\n")
-print(f"Built {len(catalog)} original problems with {sum(len(p['cases']) for p in catalog)} cases.")
+DESTINATION.write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+print(f"Built {len(catalog)} problems with {sum(len(p['cases']) for p in catalog)} cases.")

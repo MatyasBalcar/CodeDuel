@@ -135,13 +135,13 @@ public class SubmissionService {
   }
 
   private void checkPolicy(UUID version, String source, UUID user) {
-    String slug =
+    var problem =
         jdbc.sql(
-                "SELECT p.slug FROM problems p JOIN problem_versions pv ON pv.problem_id = p.id WHERE pv.id = :id")
+                "SELECT p.slug, pv.version FROM problems p JOIN problem_versions pv ON pv.problem_id = p.id WHERE pv.id = :id")
             .param("id", version)
-            .query(String.class)
+            .query((rs, row) -> java.util.Map.entry(rs.getString("slug"), rs.getInt("version")))
             .single();
-    policy.check(source, slug);
+    policy.check(source, problem.getKey(), problem.getValue());
     int pending =
         jdbc.sql("SELECT count(*) FROM submissions WHERE user_id = :user AND verdict = 'PENDING'")
             .param("user", user)

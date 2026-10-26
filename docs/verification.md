@@ -49,6 +49,22 @@ Passed in the **separate local HTTPS release stack**:
 
 Both Docker application images build from the renamed directories. Ordinary and deployment Compose configurations validate. Nginx and Caddy configuration validation passed. Both IDE project XML configurations and local Markdown links passed the final handoff check.
 
+## Problem library expansion (2026-10-26)
+
+The library now has 45 problems: 16 easy, 22 medium, and 7 hard. All **930 reference cases**
+passed on Windows with JBR 25.0.4, compiling every trusted reference with `--release 21`.
+The 30 additions include 568 cases generated from independent Python answers and explicit
+large-input expectations.
+
+Regenerating the catalog produced the same file. The original 15 problem entries match
+the saved catalog exactly, including reference source and test cases. The new entries
+also passed checks for unique slugs, two public examples per problem, matching Java
+sources, and the existing case input/output size limits. The updated library page passed
+its Prettier check.
+
+This run checked content and reference solutions. The earlier application and sandbox
+evidence above covers the original library; those checks were not rerun for this expansion.
+
 ## Limits
 
 The tested topology is one API, one trusted worker and one execution VM. Public-host routing/firewalls, encrypted provider SMTP, DNS/certificates, scheduled encrypted backups, deployed monitoring, abuse response and sandbox patch review remain operator-specific launch work. Adversarial examples are evidence for controls, not proof against all JVM/kernel escapes. Exactly-once external execution is not claimed; fencing and database constraints enforce idempotent terminal/rating effects. The fixture mode does not execute edited programs or establish sandbox safety.

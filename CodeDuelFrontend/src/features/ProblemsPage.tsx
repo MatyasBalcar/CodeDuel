@@ -19,7 +19,7 @@ export function ProblemsPage() {
           <h1>Challenges</h1>
           <p>Find a Java problem to practice.</p>
         </div>
-        <span className="outline-chip">{problems.data?.length ?? '—'} ORIGINAL CHALLENGES</span>
+        <span className="outline-chip">{problems.data?.length ?? '—'} challenges</span>
       </div>
       <div className="library-toolbar">
         <label className="search-field">
@@ -68,8 +68,8 @@ export function ProblemsPage() {
         </div>
       )}
       <div className="content-note">
-        Every published challenge has original content, an immutable contract, and verified public
-        and hidden cases.
+        Every challenge includes examples and hidden tests. Choose a familiar problem or try
+        something new.
       </div>
     </>
   )

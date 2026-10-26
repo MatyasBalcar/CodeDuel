@@ -2,6 +2,9 @@ package dev.codeduel.problems;
 
 import dev.codeduel.common.ApiException;
 import dev.codeduel.common.Sql;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -11,9 +14,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class ProblemService {
   private final JdbcClient jdbc;
+  private final ObjectMapper json;
 
-  public ProblemService(JdbcClient jdbc) {
+  public ProblemService(JdbcClient jdbc, ObjectMapper json) {
     this.jdbc = jdbc;
+    this.json = json;
   }
 
   public List<Summary> catalog() {
@@ -51,8 +56,9 @@ public class ProblemService {
             "SELECT p.slug, p.title, p.difficulty, p.tags, pv.* FROM problem_versions pv JOIN problems p ON p.id = pv.problem_id WHERE pv.id = :id AND pv.status = 'PUBLISHED'")
         .param("id", versionId)
         .query(
-            (rs, row) ->
-                new Detail(
+            (rs, row) -> {
+                var function = JavaFunction.read(rs.getString("function_contract"), json);
+                return new Detail(
                     versionId,
                     rs.getString("slug"),
                     rs.getString("title"),
@@ -67,18 +73,28 @@ public class ProblemService {
                     rs.getInt("time_limit_ms"),
                     rs.getInt("memory_limit_mb"),
                     rs.getInt("duration_seconds"),
-                    examples(versionId)))
+                    examples(versionId, function != null), function);
+            })
         .optional()
         .orElseThrow(ApiException::notFound);
   }
 
-  private List<Example> examples(UUID versionId) {
+  private List<Example> examples(UUID versionId, boolean function) {
     return jdbc.sql(
-            "SELECT input_data, expected_output FROM test_cases WHERE problem_version_id = :id AND is_public ORDER BY ordinal")
+            "SELECT COALESCE(arguments::text,input_data) AS input_data, COALESCE(expected_value::text,expected_output) AS expected_output FROM test_cases WHERE problem_version_id = :id AND is_public ORDER BY ordinal")
         .param("id", versionId)
         .query(
-            (rs, row) -> new Example(rs.getString("input_data"), rs.getString("expected_output")))
+            (rs, row) -> new Example(exampleValue(rs.getString("input_data"), function), exampleValue(rs.getString("expected_output"), function)))
         .list();
+  }
+
+  private JsonNode exampleValue(String value, boolean function) {
+    if (!function) return json.getNodeFactory().textNode(value);
+    try {
+      return json.readTree(value);
+    } catch (JsonProcessingException ex) {
+      throw new IllegalStateException("Invalid function example", ex);
+    }
   }
 
   /**
@@ -127,7 +143,8 @@ public class ProblemService {
       int timeLimitMs,
       int memoryLimitMb,
       int durationSeconds,
-      List<Example> examples) {}
+      List<Example> examples,
+      JavaFunction function) {}
 
-  public record Example(String input, String output) {}
+  public record Example(JsonNode input, JsonNode output) {}
 }

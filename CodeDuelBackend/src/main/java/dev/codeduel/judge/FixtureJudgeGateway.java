@@ -8,12 +8,17 @@ import java.util.stream.Collectors;
 /** Exact fixtures only. This class never compiles, runs, or infers correctness of user code. */
 final class FixtureJudgeGateway implements JudgeGateway {
   private final Set<String> sources;
+  private final Set<String> wrongSources;
 
   FixtureJudgeGateway(ProblemCatalog catalog) {
     sources =
         catalog.all().stream()
             .map(ProblemCatalog.Content::referenceSource)
             .collect(Collectors.toUnmodifiableSet());
+    var wrong = new java.util.HashSet<String>();
+    wrong.add(ProblemCatalog.WRONG_SOURCE);
+    for (var problem : catalog.all()) wrong.add(ProblemCatalog.wrongSource(problem));
+    wrongSources = Set.copyOf(wrong);
   }
 
   @Override
@@ -29,7 +34,7 @@ final class FixtureJudgeGateway implements JudgeGateway {
 
   public String start(Request request) {
     if (sources.contains(request.source())) return "fixture:ACCEPTED";
-    if (ProblemCatalog.WRONG_SOURCE.equals(request.source())) return "fixture:WRONG_ANSWER";
+    if (wrongSources.contains(request.source())) return "fixture:WRONG_ANSWER";
     throw new JudgeUnavailableException();
   }
 
