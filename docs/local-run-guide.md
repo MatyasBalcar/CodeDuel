@@ -146,6 +146,24 @@ Open **http://localhost:5173** in two separate browser profiles. Log in as `nova
 
 Use the same hostname throughout a session. Host ports bind only to loopback. `docker compose down` preserves the named database volume. Do not remove volumes to switch modes.
 
+## Real Java execution on Windows
+
+With the Ubuntu WSL Docker Engine configured, run from the project root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\worker\sandbox\setup-windows.ps1
+```
+
+This provisions a separate Ubuntu executor VM, installs Java 21 and the existing
+go-judge service, and starts the real API/worker configuration. It writes the ignored
+`.env.judge.local` and `.env` settings, so normal `docker compose up -d` also uses real
+execution afterward. No PostgreSQL data is removed. Practice, private rooms, and ranked
+matches all accept your own Java functions in this mode.
+
+Use `-Action start` after stopping the VM, `-Action status` to check it, and
+`-Action test` for real sandbox and worker tests. See the [executor guide](../worker/sandbox/README.md)
+for the VM layout and maintenance commands.
+
 ## Real Java execution on this Mac
 
 Requires macOS virtualization, Lima 2+, Docker/Colima, and approximately 3 GiB additional RAM for a dedicated execution VM. Install Lima with `brew install lima` if needed.

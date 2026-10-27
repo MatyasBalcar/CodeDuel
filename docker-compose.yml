@@ -71,8 +71,6 @@ services:
   worker:
     image: codeduel-api:local
     profiles: [worker]
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     environment:
       <<: *application
       SPRING_PROFILES_ACTIVE: worker

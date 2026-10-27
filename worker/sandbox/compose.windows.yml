@@ -1,0 +1,6 @@
+services:
+  worker:
+    network_mode: host
+    environment:
+      DATABASE_URL: jdbc:postgresql://127.0.0.1:5444/codeduel
+      JUDGE_URL: http://127.0.0.1:5058

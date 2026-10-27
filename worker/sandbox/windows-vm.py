@@ -2,7 +2,6 @@
 import argparse
 import fcntl
 import hashlib
-import ipaddress
 import json
 import os
 from pathlib import Path
@@ -46,9 +45,11 @@ def save_settings():
     if len(token) < 32 or not all(c.isalnum() or c in '_-' for c in token):
         raise RuntimeError('Use a strong URL-safe executor token in .env.judge.local.')
     updates = dict(SPRING_PROFILES_ACTIVE='', JUDGE_MODE='GO_JUDGE',
-                   JUDGE_URL='http://host.docker.internal:5058', JUDGE_AUTH_TOKEN=token,
+                   JUDGE_URL='http://127.0.0.1:5058', JUDGE_AUTH_TOKEN=token,
                    DATABASE_PASSWORD=values.get('DATABASE_PASSWORD') or 'codeduel_local',
-                   COOKIE_SECURE='false', COMPOSE_PROFILES='worker')
+                   COOKIE_SECURE='false', COMPOSE_PROFILES='worker',
+                   COMPOSE_PATH_SEPARATOR=';',
+                   COMPOSE_FILE='docker-compose.yml;worker/sandbox/compose.windows.yml')
     for name in ('.env.judge.local', '.env'):
         path = ROOT / name
         lines = path.read_text(encoding='utf-8-sig').splitlines() if path.exists() else []
@@ -166,12 +167,8 @@ def prepare_disk(account):
 
 
 def configure_service(restricted):
-    gateway = run('docker', 'network', 'inspect', 'bridge', '--format',
-                  '{{(index .IPAM.Config 0).Gateway}}', capture=True)
-    ipaddress.IPv4Address(gateway)
     network = ('user,id=net0,ipv6=off,restrict=' + ('on' if restricted else 'off')
-               + ',hostfwd=tcp:127.0.0.1:2227-:22,hostfwd=tcp:127.0.0.1:5058-:5050'
-               + ',hostfwd=tcp:' + gateway + ':5058-:5050')
+               + ',hostfwd=tcp:127.0.0.1:2227-:22,hostfwd=tcp:127.0.0.1:5058-:5050')
     command = ['/usr/bin/qemu-system-x86_64', '-name', 'codeduel-executor',
                '-machine', 'q35,accel=kvm', '-cpu', 'host', '-smp', '2', '-m', '3072',
                '-nodefaults', '-no-user-config', '-display', 'none', '-monitor', 'none',
@@ -292,6 +289,7 @@ def main():
         setup_vm(update=action == 'update')
         start_app()
     elif action == 'start':
+        save_settings()
         start_app()
     elif action == 'stop':
         compose('stop', 'api', 'worker')

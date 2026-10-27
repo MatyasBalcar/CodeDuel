@@ -86,6 +86,15 @@ docker compose up -d --build db mailpit api frontend
 Use either the Docker stack or the Windows scripts at a time, since they use the same ports.
 The [local run guide](docs/local-run-guide.md) also covers macOS and the real judge.
 
+For real Java execution on the Windows/WSL setup, run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\worker\sandbox\setup-windows.ps1
+```
+
+It creates the separate executor VM and saves real-judge settings for subsequent
+`docker compose up` runs. See the [executor guide](worker/sandbox/README.md).
+
 ## Checks
 
 To run the GitHub Actions checks locally on this Windows/WSL setup:

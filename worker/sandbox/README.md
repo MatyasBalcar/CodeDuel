@@ -2,6 +2,36 @@
 
 This directory provisions the **execution** service, separate from the trusted orchestration worker and database. It uses [go-judge v1.13.3](https://github.com/criyle/go-judge) (MIT; notice in `licenses/`), Linux cgroups/namespaces/seccomp, and the Ubuntu Java 21 security package. Installation records the exact Java package/runtime version. No application secret, database, project/home mount, Docker daemon or SSH-agent forwarding belongs in this VM.
 
+On Windows with the Ubuntu WSL Docker Engine, from the repository root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\worker\sandbox\setup-windows.ps1
+```
+
+This creates a separate 2 CPU / 3 GiB Ubuntu KVM guest inside WSL. It reuses
+`install-linux.sh` and `mount.yaml`, with no host directory shares. The VM image and
+go-judge binary are checksum-pinned. Installation temporarily allows package downloads;
+the running guest cannot contact the host or Internet. Only authenticated judge requests
+and local administration ports are forwarded.
+
+The script saves private settings in `.env.judge.local` and `.env`. Normal
+`docker compose up -d` then starts the real API and worker. A Windows-only Compose
+override connects the trusted worker to the local database and executor through the
+WSL host network. Submitted Java still runs only inside the separate guest.
+Existing application data is preserved.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\worker\sandbox\setup-windows.ps1 -Action start
+powershell -ExecutionPolicy Bypass -File .\worker\sandbox\setup-windows.ps1 -Action status
+powershell -ExecutionPolicy Bypass -File .\worker\sandbox\setup-windows.ps1 -Action test
+powershell -ExecutionPolicy Bypass -File .\worker\sandbox\setup-windows.ps1 -Action stop
+```
+
+`update` refreshes the guest's Java package and judge installation while the API and
+worker are stopped. VM files live in Ubuntu at `/var/lib/codeduel-executor`; the
+`codeduel-executor` systemd service starts with that WSL distribution. The setup needs
+nested KVM support (`/dev/kvm`) and Python 3. It installs QEMU when needed.
+
 On macOS with Lima 2+ (`brew install lima`), from the repository root:
 
 ```sh
